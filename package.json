@@ -58,7 +58,7 @@
     "@types/diff": "5.0.9",
     "@types/express": "4.17.21",
     "@types/mocha": "10.0.6",
-    "@types/node": "18.19.30",
+    "@types/node": "18.19.31",
     "chai": "4.4.1",
     "dotenv": "16.4.5",
     "eslint": "8.57.0",
