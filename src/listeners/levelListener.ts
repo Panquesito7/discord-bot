@@ -1,11 +1,12 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import { MessageEmbed, TextChannel } from "discord.js";
+import { ChannelType, EmbedBuilder, TextChannel } from "discord.js";
 
 import levelScale from "../config/listeners/levelScale";
-import { LevelOptOut } from "../config/optout/LevelOptOut";
-import LevelModel from "../database/models/LevelModel";
 import { Listener } from "../interfaces/listeners/Listener";
+import { generateLevelText } from "../modules/listeners/generateLevelText";
+import { getOptOutRecord } from "../modules/listeners/getOptOutRecord";
+import { processLevelRoles } from "../modules/listeners/processLevelRoles";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
+import { debugLogger } from "../utils/debugLogger";
 
 /**
  * Confirms the server has enabled the level system, then awards
@@ -20,13 +21,11 @@ export const levelListener: Listener = {
   description: "Grants experience based on message activity in the server.",
   run: async (Becca, message, t, serverSettings) => {
     try {
-      const { author, content, guild, member } = message;
+      const { author, content, guild } = message;
 
-      if (LevelOptOut.includes(author.id)) {
-        return;
-      }
+      const optout = await getOptOutRecord(Becca, author.id);
 
-      if (!guild) {
+      if (!optout || optout.level) {
         return;
       }
 
@@ -43,7 +42,8 @@ export const levelListener: Listener = {
       if (serverSettings.level_channel) {
         const realChannel = guild.channels.cache.find(
           (c) =>
-            c.id === serverSettings.level_channel && c.type === "GUILD_TEXT"
+            c.id === serverSettings.level_channel &&
+            c.type === ChannelType.GuildText
         );
         if (realChannel) {
           targetChannel = realChannel as TextChannel;
@@ -52,9 +52,15 @@ export const levelListener: Listener = {
 
       const bonus = Math.floor(content.length / 10);
       const pointsEarned = Math.floor(Math.random() * (20 + bonus)) + 5;
-      const user =
-        (await LevelModel.findOne({ serverID: guild.id, userID: author.id })) ||
-        (await LevelModel.create({
+      const user = await Becca.db.newlevels.upsert({
+        where: {
+          serverID_userID: {
+            serverID: guild.id,
+            userID: author.id,
+          },
+        },
+        update: {},
+        create: {
           serverID: guild.id,
           serverName: guild.name,
           userID: author.id,
@@ -64,10 +70,23 @@ export const levelListener: Listener = {
           level: 0,
           lastSeen: new Date(Date.now()),
           cooldown: 0,
-        }));
+        },
+      });
 
-      if (Date.now() - user.cooldown < 300000 || user.level >= 100) {
+      if (Date.now() - user.cooldown < 60000 || user.level >= 100) {
         return;
+      }
+
+      const decayRate = Number(serverSettings.level_decay);
+
+      if (decayRate) {
+        const days = Math.floor(
+          (Date.now() - user.lastSeen.getTime()) / 86400000
+        );
+        for (let i = 1; i <= days; i++) {
+          user.points =
+            user.points - Math.ceil(user.points * (decayRate / 100));
+        }
       }
 
       user.points += pointsEarned;
@@ -82,56 +101,74 @@ export const levelListener: Listener = {
         levelUp = true;
       }
 
-      await user.save();
+      await Becca.db.newlevels.update({
+        where: {
+          serverID_userID: {
+            serverID: guild.id,
+            userID: author.id,
+          },
+        },
+        data: {
+          points: user.points,
+          level: user.level,
+          lastSeen: user.lastSeen,
+          userTag: user.userTag,
+          avatar: user.avatar,
+          cooldown: user.cooldown,
+        },
+      });
 
       if (levelUp) {
-        const levelEmbed = new MessageEmbed();
-        levelEmbed.setTitle(t("listeners:level.title"));
-        levelEmbed.setDescription(
-          t("listeners:level.desc", {
-            user: `<@!${author.id}>`,
-            level: user.level,
-          })
-        );
-        levelEmbed.setColor(Becca.colours.default);
-        levelEmbed.setAuthor({
-          name: author.tag,
-          iconURL: author.displayAvatarURL(),
-        });
-        levelEmbed.setFooter({
-          text: t("defaults:donate"),
-          iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
-        });
-        await targetChannel.send({ embeds: [levelEmbed] });
+        const content = serverSettings.level_message
+          ? generateLevelText(serverSettings.level_message, author, user.level)
+          : t("listeners:level.desc", {
+              user: `<@!${author.id}>`,
+              level: user.level,
+            });
+        if (serverSettings.level_style === "embed") {
+          const levelEmbed = new EmbedBuilder();
+          levelEmbed.setTitle(t("listeners:level.title"));
+          levelEmbed.setDescription(content);
+          levelEmbed.setColor(Becca.colours.default);
+          levelEmbed.setAuthor({
+            name: author.tag,
+            iconURL: author.displayAvatarURL(),
+          });
+          levelEmbed.setFooter({
+            text: t("defaults:footer"),
+            iconURL: "https://cdn.nhcarrigan.com/profile.png",
+          });
+          await targetChannel
+            .send({ embeds: [levelEmbed] })
+            .catch((err) =>
+              debugLogger(
+                "level listener",
+                err.message,
+                `channel id ${targetChannel.id} in guild id ${guild.id}`
+              )
+            );
+        } else {
+          await targetChannel
+            .send({ content, allowedMentions: {} })
+            .catch((err) =>
+              debugLogger(
+                "level listener",
+                err.message,
+                `channel id ${targetChannel.id} in guild id ${guild.id}`
+              )
+            );
+        }
       }
 
       if (serverSettings.level_roles.length) {
-        for (const setting of serverSettings.level_roles) {
-          if (user.level >= setting.level) {
-            const role = guild.roles.cache.find((r) => r.id === setting.role);
-            if (role && !member?.roles.cache.find((r) => r.id === role.id)) {
-              await member?.roles.add(role);
-              const roleEmbed = new MessageEmbed();
-              roleEmbed.setTitle(t("listeners:level.roleTitle"));
-              roleEmbed.setDescription(
-                t("listeners:level.roleDesc", {
-                  user: `<@!${author.id}>`,
-                  role: `<@&${role.id}>`,
-                })
-              );
-              roleEmbed.setColor(Becca.colours.default);
-              roleEmbed.setAuthor({
-                name: author.tag,
-                iconURL: author.displayAvatarURL(),
-              });
-              roleEmbed.setFooter({
-                text: t("default:donate"),
-                iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
-              });
-              await targetChannel.send({ embeds: [roleEmbed] });
-            }
-          }
-        }
+        await processLevelRoles(
+          Becca,
+          user,
+          serverSettings,
+          message,
+          targetChannel,
+          t
+        );
       }
     } catch (err) {
       await beccaErrorHandler(

@@ -1,32 +1,52 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import {
   SlashCommandBuilder,
   SlashCommandRoleOption,
   SlashCommandSubcommandBuilder,
   SlashCommandUserOption,
-} from "@discordjs/builders";
+  ChannelType,
+} from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleLeaderboard } from "../modules/commands/subcommands/community/handleLeaderboard";
-import { handleLevel } from "../modules/commands/subcommands/community/handleLevel";
-import { handleMotivation } from "../modules/commands/subcommands/community/handleMotivation";
-import { handlePoll } from "../modules/commands/subcommands/community/handlePoll";
-import { handleRole } from "../modules/commands/subcommands/community/handleRole";
-import { handleSchedule } from "../modules/commands/subcommands/community/handleSchedule";
-import { handleServer } from "../modules/commands/subcommands/community/handleServer";
-import { handleStar } from "../modules/commands/subcommands/community/handleStar";
-import { handleStarCount } from "../modules/commands/subcommands/community/handleStarCount";
-import { handleSuggest } from "../modules/commands/subcommands/community/handleSuggest";
-import { handleTopic } from "../modules/commands/subcommands/community/handleTopic";
-import { handleUserInfo } from "../modules/commands/subcommands/community/handleUserInfo";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleLeaderboard } from "./subcommands/community/handleLeaderboard";
+import { handleLevel } from "./subcommands/community/handleLevel";
+import { handleMotivation } from "./subcommands/community/handleMotivation";
+import { handlePoll } from "./subcommands/community/handlePoll";
+import { handleRole } from "./subcommands/community/handleRole";
+import { handleSchedule } from "./subcommands/community/handleSchedule";
+import { handleServer } from "./subcommands/community/handleServer";
+import { handleStar } from "./subcommands/community/handleStar";
+import { handleStarCount } from "./subcommands/community/handleStarCount";
+import { handleSuggest } from "./subcommands/community/handleSuggest";
+import { handleTicket } from "./subcommands/community/handleTicket";
+import { handleTopic } from "./subcommands/community/handleTopic";
+import { handleUserInfo } from "./subcommands/community/handleUserInfo";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: CommandHandler } = {
+  leaderboard: handleLeaderboard,
+  level: handleLevel,
+  role: handleRole,
+  motivation: handleMotivation,
+  schedule: handleSchedule,
+  star: handleStar,
+  starcount: handleStarCount,
+  topic: handleTopic,
+  userinfo: handleUserInfo,
+  server: handleServer,
+  suggest: handleSuggest,
+  poll: handlePoll,
+  ticket: handleTicket,
+};
 
 export const community: Command = {
   data: new SlashCommandBuilder()
     .setName("community")
     .setDescription("Handles community-related features")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("leaderboard")
@@ -78,6 +98,12 @@ export const community: Command = {
             .setName("channel")
             .setDescription("The channel to send the notification in.")
             .setRequired(true)
+            .addChannelTypes(
+              ChannelType.GuildText,
+              ChannelType.GuildAnnouncement,
+              ChannelType.PublicThread,
+              ChannelType.GuildForum
+            )
         )
         .addStringOption((option) =>
           option
@@ -143,6 +169,24 @@ export const community: Command = {
       new SlashCommandSubcommandBuilder()
         .setName("poll")
         .setDescription("Create a poll.")
+        .addIntegerOption((option) =>
+          option
+            .setName("duration")
+            .setDescription("The length of time for the poll to remain active.")
+            .setRequired(true)
+        )
+        .addStringOption((option) =>
+          option
+            .setName("unit")
+            .setDescription("The unit of time for the duration.")
+            .setRequired(true)
+            .addChoices(
+              { name: "Minutes", value: "minutes" },
+              { name: "Hours", value: "hours" },
+              { name: "Days", value: "days" },
+              { name: "Weeks", value: "weeks" }
+            )
+        )
         .addStringOption((option) =>
           option
             .setName("question")
@@ -161,56 +205,24 @@ export const community: Command = {
         .addStringOption((option) =>
           option.setName("d").setDescription("Option D").setRequired(true)
         )
+    )
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
+        .setName("ticket")
+        .setDescription("Create a support ticket.")
+        .addStringOption((option) =>
+          option
+            .setName("reason")
+            .setDescription("Why are you opening this ticket?")
+            .setRequired(true)
+        )
     ),
   run: async (Becca, interaction, t, config) => {
     try {
       await interaction.deferReply();
       const subcommand = interaction.options.getSubcommand();
-
-      switch (subcommand) {
-        case "leaderboard":
-          await handleLeaderboard(Becca, interaction, t, config);
-          break;
-        case "level":
-          await handleLevel(Becca, interaction, t, config);
-          break;
-        case "role":
-          await handleRole(Becca, interaction, t, config);
-          break;
-        case "motivation":
-          await handleMotivation(Becca, interaction, t, config);
-          break;
-        case "schedule":
-          await handleSchedule(Becca, interaction, t, config);
-          break;
-        case "star":
-          await handleStar(Becca, interaction, t, config);
-          break;
-        case "starcount":
-          await handleStarCount(Becca, interaction, t, config);
-          break;
-        case "topic":
-          await handleTopic(Becca, interaction, t, config);
-          break;
-        case "userinfo":
-          await handleUserInfo(Becca, interaction, t, config);
-          break;
-        case "server":
-          await handleServer(Becca, interaction, t, config);
-          break;
-        case "suggest":
-          await handleSuggest(Becca, interaction, t, config);
-          break;
-        case "poll":
-          await handlePoll(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subcommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

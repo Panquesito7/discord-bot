@@ -1,4 +1,4 @@
-import { MessageEmbed, ThreadChannel } from "discord.js";
+import { EmbedBuilder, ThreadChannel } from "discord.js";
 import { getFixedT } from "i18next";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
@@ -18,7 +18,7 @@ export const threadDelete = async (
   try {
     const lang = thread.guild.preferredLocale;
     const t = getFixedT(lang);
-    const threadEmbed = new MessageEmbed();
+    const threadEmbed = new EmbedBuilder();
     threadEmbed.setTitle(t("events:thread.delete.title"));
     threadEmbed.setDescription(
       t("events:thread.delete.desc", {
@@ -27,11 +27,10 @@ export const threadDelete = async (
       })
     );
     threadEmbed.setColor(Becca.colours.error);
-    threadEmbed.setFooter(`ID: ${thread.id}`);
+    threadEmbed.setFooter({ text: `ID: ${thread.id}` });
     threadEmbed.setTimestamp();
 
     await sendLogEmbed(Becca, thread.guild, threadEmbed, "thread_events");
-    Becca.pm2.metrics.events.mark();
   } catch (err) {
     await beccaErrorHandler(Becca, "thread delete event", err);
   }

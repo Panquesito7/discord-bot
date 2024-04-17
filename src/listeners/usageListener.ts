@@ -1,7 +1,5 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 
-import UsageModel from "../database/models/UsageModel";
 import { BeccaLyria } from "../interfaces/BeccaLyria";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 
@@ -14,22 +12,35 @@ export const usageListener = {
   description: "Tracks command usage.",
   run: async (
     Becca: BeccaLyria,
-    interaction: CommandInteraction
+    interaction: ChatInputCommandInteraction
   ): Promise<void> => {
     try {
       const command = interaction.commandName;
-      const subcommand = interaction.options.getSubcommand();
+      const subcommand =
+        interaction.options.getSubcommand(false) || "no subcommand";
 
-      const data =
-        (await UsageModel.findOne({ command, subcommand })) ||
-        (await UsageModel.create({ command, subcommand, uses: 0 }));
-
-      data.uses++;
-      await data.save();
+      await Becca.db.usages.upsert({
+        where: {
+          command_subcommand: {
+            command,
+            subcommand,
+          },
+        },
+        update: {
+          uses: {
+            increment: 1,
+          },
+        },
+        create: {
+          command,
+          subcommand,
+          uses: 0,
+        },
+      });
     } catch (err) {
       await beccaErrorHandler(
         Becca,
-        "thanks listener",
+        "usage listener",
         err,
         interaction.guild?.name
       );

@@ -1,4 +1,5 @@
-/* eslint-disable jsdoc/require-jsdoc */
+import { PermissionFlagsBits } from "discord.js";
+
 import { Listener } from "../interfaces/listeners/Listener";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 
@@ -35,7 +36,7 @@ export const automodListener: Listener = {
         return;
       }
 
-      if (message.member?.permissions.has("MANAGE_MESSAGES")) {
+      if (message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
         return;
       }
 

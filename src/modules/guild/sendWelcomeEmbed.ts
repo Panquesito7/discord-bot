@@ -1,4 +1,4 @@
-import { Guild, MessageEmbed, TextChannel } from "discord.js";
+import { ChannelType, EmbedBuilder, Guild, TextChannel } from "discord.js";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
@@ -11,13 +11,13 @@ import { getSettings } from "../settings/getSettings";
  * @param {BeccaLyria} Becca Becca's Discord instance.
  * @param {Guild} guild The guild object.
  * @param {string} type The type of message to send, either `join` or `leave`.
- * @param {MessageEmbed} content The MessageEmbed to send to the log channel.
+ * @param {EmbedBuilder} content The MessageEmbed to send to the log channel.
  */
 export const sendWelcomeEmbed = async (
   Becca: BeccaLyria,
   guild: Guild,
   type: "join" | "leave",
-  content: MessageEmbed
+  content: EmbedBuilder
 ): Promise<void> => {
   try {
     const guildSettings = await getSettings(Becca, guild.id, guild.name);
@@ -32,7 +32,8 @@ export const sendWelcomeEmbed = async (
     }
 
     const targetChannel = guild.channels.cache.find(
-      (chan) => chan.id === guildChannelSetting && chan.type === "GUILD_TEXT"
+      (chan) =>
+        chan.id === guildChannelSetting && chan.type === ChannelType.GuildText
     ) as TextChannel | undefined;
 
     if (!targetChannel) {

@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB")
+}
+
+type PollsResults {
+  a Int @default(0)
+  b Int @default(0)
+  c Int @default(0)
+  d Int @default(0)
+}
+
+type ServersLevelRoles {
+  level Int
+  role  String
+}
+
+type StarcountsUsers {
+  avatar  String @default("")
+  stars   Int    @default(0)
+  userID  String
+  userTag String @default("")
+}
+
+type Trigger {
+  trigger  String
+  response String
+}
+
+type UserconfigsLevelcard {
+  background String @default("#3a3240")
+  foreground String @default("#aea8de")
+  progress   String @default("#ffffff")
+}
+
+model activities {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int?   @map("__v") @ignore
+  buttons  Int    @default(0)
+  commands Int    @default(0)
+  contexts Int    @default(0)
+  selects  Int    @default(0)
+  userId   String
+
+  @@unique([userId], map: "userId_1")
+}
+
+model currencies {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  v               Int?   @map("__v") @ignore
+  currencyTotal   Int    @default(0)
+  dailyClaimed    Int    @default(0)
+  monthlyClaimed  Int    @default(0)
+  slotsPlayed     Int    @default(0)
+  twentyOnePlayed Int    @default(0)
+  userId          String
+  weeklyClaimed   Int    @default(0)
+
+  @@unique([userId], map: "userId_1")
+}
+
+model emotecounts {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int?   @map("__v") @ignore
+  avatar   String @default("")
+  boop     Int    @default(0)
+  hug      Int    @default(0)
+  kiss     Int    @default(0)
+  pat      Int    @default(0)
+  smack    Int    @default(0)
+  throw    Int    @default(0)
+  userId   String
+  userName String @default("")
+  uwu      Int    @default(0)
+
+  @@unique([userId], map: "userId_1")
+}
+
+model histories {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int?   @map("__v") @ignore
+  bans     Int    @default(0)
+  kicks    Int    @default(0)
+  mutes    Int    @default(0)
+  serverId String
+  unbans   Int    @default(0)
+  unmutes  Int    @default(0)
+  userId   String
+  warns    Int    @default(0)
+
+  @@unique([serverId, userId], map: "serverId_1_userId_1")
+}
+
+model messagecounts {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int?   @map("__v") @ignore
+  messages Int    @default(0)
+  serverId String
+  userId   String
+
+  @@unique([serverId, userId], map: "serverId_1_userId_1")
+}
+
+model newlevels {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  v          Int?     @map("__v") @ignore
+  avatar     String   @default("")
+  cooldown   Int      @default(0)
+  lastSeen   DateTime @db.Date
+  level      Int      @default(0)
+  points     Int      @default(0)
+  serverID   String
+  serverName String   @default("")
+  userID     String
+  userTag    String   @default("")
+
+  @@unique([serverID, userID], map: "serverID_1_userID_1")
+}
+
+model optouts {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int?    @map("__v") @ignore
+  activity Boolean @default(false)
+  emote    Boolean @default(false)
+  level    Boolean @default(false)
+  star     Boolean @default(false)
+  userId   String
+  vote     Boolean @default(false)
+
+  @@unique([userId], map: "userId_1")
+}
+
+model polls {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int?         @map("__v") @ignore
+  channelId String
+  endsAt    Int          @default(0)
+  messageId String
+  responses String[]     @default([])
+  results   PollsResults
+  serverId  String
+
+  @@unique([serverId, channelId, messageId], map: "serverId_1_channelId_1_messageId_1")
+}
+
+model scheduledevents {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  v             Int?   @map("__v") @ignore
+  member        String
+  time          Int
+  targetChannel String
+  lang          String
+  message       String
+
+  @@unique([member, targetChannel], map: "member_1_targetChannel_1")
+}
+
+model servers {
+  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int?                @map("__v") @ignore
+  allowed_links       String[]            @default([])
+  anti_links          String[]            @default([])
+  antiphish           String              @default("none")
+  appeal_link         String              @default("")
+  automod_channels    String[]            @default([])
+  automod_roles       String[]            @default([])
+  blocked             String[]            @default([])
+  custom_welcome      String              @default("Hello {@username}! Welcome to {@servername}! My name is Becca. Feel free to let me know if you need anything.")
+  depart_channel      String              @default("")
+  emote_channels      String[]            @default([])
+  hearts              String[]            @default([])
+  initial_xp          String              @default("0")
+  join_role           String              @default("")
+  leave_message       String              @default("{@username}, thank you for your time in {@servername}. Your contributions are appreciated.")
+  level_channel       String              @default("")
+  level_decay         Int                 @default(0)
+  level_ignore        String[]            @default([])
+  level_message       String              @default("")
+  level_roles         ServersLevelRoles[]
+  level_style         String              @default("embed")
+  levels              String              @default("off")
+  link_message        String              @default("{@username}, it seems you are not allowed to send links in this channel.")
+  links               String              @default("off")
+  log_channel         String              @default("")
+  member_events       String              @default("")
+  message_events      String              @default("")
+  moderation_events   String              @default("")
+  new_triggers        Trigger[]           @map("newTriggers")
+  no_automod_channels String[]            @default([])
+  profanity           String              @default("off")
+  profanity_message   String              @default("{@username}, your message appears to have been inappropriate. I removed it.")
+  report_channel      String              @default("")
+  role_message        String              @default("")
+  sass_mode           String              @default("off")
+  serverID            String
+  serverName          String              @default("")
+  starboard_channel   String              @default("")
+  starboard_emote     String              @default("")
+  starboard_threshold Int                 @default(5)
+  suggestion_channel  String              @default("")
+  thread_events       String              @default("")
+  ticket_category     String              @default("")
+  ticket_log_channel  String              @default("")
+  ticket_role         String              @default("")
+  voice_events        String              @default("")
+  welcome_channel     String              @default("")
+  welcome_style       String              @default("embed")
+
+  @@unique([serverID], map: "serverID_1")
+}
+
+model starcounts {
+  id         String            @id @default(auto()) @map("_id") @db.ObjectId
+  v          Int?              @map("__v") @ignore
+  serverID   String
+  serverName String            @default("")
+  users      StarcountsUsers[]
+
+  @@unique([serverID], map: "serverID_1")
+}
+
+model usages {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  v          Int?   @map("__v") @ignore
+  command    String
+  subcommand String
+  uses       Int    @default(0)
+
+  @@unique([command, subcommand], map: "command_1_subcommand_1")
+}
+
+model userconfigs {
+  id        String               @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int?                 @map("__v") @ignore
+  levelcard UserconfigsLevelcard
+  userId    String
+
+  @@unique([userId], map: "userId_1")
+}
+
+model voters {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  v            Int?   @map("__v") @ignore
+  activeMonth  Int    @default(0)
+  botVotes     Int    @default(0)
+  monthlyVotes Int    @default(0)
+  serverVotes  Int    @default(0)
+  userId       String
+
+  @@unique([userId], map: "userId_1")
+}

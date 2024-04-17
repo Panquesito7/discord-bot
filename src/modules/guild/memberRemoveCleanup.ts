@@ -1,5 +1,3 @@
-import LevelModel from "../../database/models/LevelModel";
-import StarModel from "../../database/models/StarModel";
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
 
@@ -17,25 +15,48 @@ export const memberRemoveCleanup = async (
   guildId: string
 ): Promise<void> => {
   try {
-    const levelData = await LevelModel.findOne({
-      serverID: guildId,
-      userID: userId,
+    await Becca.db.newlevels
+      .delete({
+        where: {
+          serverID_userID: {
+            userID: userId,
+            serverID: guildId,
+          },
+        },
+      })
+      .catch(() => null);
+
+    const starData = await Becca.db.starcounts.findUnique({
+      where: {
+        serverID: guildId,
+      },
     });
-
-    if (levelData) {
-      await levelData.delete();
-    }
-
-    const starData = await StarModel.findOne({ serverID: guildId });
 
     if (starData) {
       const index = starData.users.findIndex((user) => user.userID === userId);
       if (index !== -1) {
         starData.users.splice(index, 1);
-        starData.markModified("users");
-        await starData.save();
+        await Becca.db.starcounts.update({
+          where: {
+            serverID: guildId,
+          },
+          data: {
+            users: starData.users,
+          },
+        });
       }
     }
+
+    await Becca.db.messagecounts
+      .delete({
+        where: {
+          serverId_userId: {
+            serverId: guildId,
+            userId,
+          },
+        },
+      })
+      .catch(() => null);
   } catch (error) {
     await beccaErrorHandler(Becca, "member cleanup helper", error);
   }

@@ -1,4 +1,4 @@
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
 
@@ -8,7 +8,7 @@ import { BeccaLyria } from "../../interfaces/BeccaLyria";
  * @param {BeccaLyria} Becca Becca's Discord instance.
  */
 export const disconnect = async (Becca: BeccaLyria): Promise<void> => {
-  const disconnectEmbed = new MessageEmbed();
+  const disconnectEmbed = new EmbedBuilder();
   disconnectEmbed.setTitle("Becca has disconnected");
   disconnectEmbed.setDescription(
     `${
@@ -17,6 +17,11 @@ export const disconnect = async (Becca: BeccaLyria): Promise<void> => {
   );
   disconnectEmbed.setTimestamp();
   disconnectEmbed.setColor(Becca.colours.error);
-  await Becca.debugHook.send({ embeds: [disconnectEmbed] });
-  Becca.pm2.metrics.events.mark();
+  await Becca.debugHook.send({
+    embeds: [disconnectEmbed],
+    username: Becca.user?.username ?? "Becca",
+    avatarURL:
+      Becca.user?.displayAvatarURL() ??
+      "https://cdn.nhcarrigan.com/avatars/nhcarrigan.png",
+  });
 };

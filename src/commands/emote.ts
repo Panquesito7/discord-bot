@@ -1,22 +1,26 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { emoteChoices } from "../config/commands/emoteData";
-import { EmoteOptOut } from "../config/optout/EmoteOptOut";
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleEmoteUse } from "../modules/commands/subcommands/emote/handleEmoteUse";
-import { handleEmoteView } from "../modules/commands/subcommands/emote/handleEmoteView";
+import { getOptOutRecord } from "../modules/listeners/getOptOutRecord";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleEmoteUse } from "./subcommands/emote/handleEmoteUse";
+import { handleEmoteView } from "./subcommands/emote/handleEmoteView";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: CommandHandler } = {
+  use: handleEmoteUse,
+  view: handleEmoteView,
+};
 
 export const emote: Command = {
   data: new SlashCommandBuilder()
     .setName("emote")
     .setDescription("Emote commands!")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("use")
@@ -26,7 +30,7 @@ export const emote: Command = {
             .setName("emote")
             .setRequired(true)
             .setDescription("The emote to use.")
-            .addChoices(emoteChoices)
+            .addChoices(...emoteChoices)
         )
         .addUserOption((option) =>
           option
@@ -46,28 +50,15 @@ export const emote: Command = {
     try {
       await interaction.deferReply();
 
-      if (EmoteOptOut.includes(interaction.user.id)) {
-        await interaction.editReply(
-          "You have opted out of the emote system and cannot use these commands."
-        );
+      const optout = await getOptOutRecord(Becca, interaction.user.id);
+
+      if (!optout || optout.emote) {
         return;
       }
 
       const subcommand = interaction.options.getSubcommand();
-
-      switch (subcommand) {
-        case "use":
-          await handleEmoteUse(Becca, interaction, t, config);
-          break;
-        case "view":
-          await handleEmoteView(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.reply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subcommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

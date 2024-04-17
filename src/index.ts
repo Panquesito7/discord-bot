@@ -1,15 +1,13 @@
-/* eslint-disable require-atomic-updates */
 import { RewriteFrames } from "@sentry/integrations";
-import * as Sentry from "@sentry/node";
-import { Client, WebhookClient } from "discord.js";
+import { init } from "@sentry/node";
+import { ActivityType, Client } from "discord.js";
 
 import { initialiseTranslations } from "./config/i18n/initialiseTranslations";
 import { IntentOptions } from "./config/IntentOptions";
-import { connectDatabase } from "./database/connectDatabase";
+import { connectPrisma } from "./database/connectPrisma";
 import { handleEvents } from "./events/handleEvents";
 import { BeccaLyria } from "./interfaces/BeccaLyria";
-import { loadPM2 } from "./modules/loadPM2";
-import { validateEnv } from "./modules/validateEnv";
+import { prepareBecca } from "./modules/prepareBecca";
 import { createServer } from "./server/serve";
 import { beccaErrorHandler } from "./utils/beccaErrorHandler";
 import { beccaLogHandler } from "./utils/beccaLogHandler";
@@ -17,7 +15,7 @@ import { loadCommands } from "./utils/loadCommands";
 import { loadContexts } from "./utils/loadContexts";
 import { registerCommands } from "./utils/registerCommands";
 
-Sentry.init({
+init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
   integrations: [
@@ -25,12 +23,15 @@ Sentry.init({
       root: global.__dirname,
     }),
   ],
+  release: `becca-lyria-bot@v${process.env.npm_package_version}`,
+  environment: "production",
 });
 
 /**
  * This is the entry point for Becca's process. This will log the boot process,
  * call the necessary helpers to prepare Becca, and then log in to Discord.
  */
+// skipcq: JS-0098
 void (async () => {
   beccaLogHandler.log("debug", "Starting process...");
 
@@ -44,19 +45,33 @@ void (async () => {
   }) as BeccaLyria;
 
   beccaLogHandler.log("debug", "Validating environment variables...");
-  const validatedEnvironment = validateEnv(Becca);
-  if (!validatedEnvironment.valid) {
-    beccaLogHandler.log("error", validatedEnvironment.message);
-    return;
-  }
-  const loadedPM2 = loadPM2(Becca);
-  if (!loadedPM2) {
-    beccaLogHandler.log("error", "Unable to load Grafana metrics");
-    return;
-  }
+  prepareBecca(Becca);
 
-  Becca.debugHook = new WebhookClient({ url: Becca.configs.whUrl });
-  Becca.currencyHook = new WebhookClient({ url: Becca.configs.currencyUrl });
+  /**
+   * Fallthrough error handlers. These fire in rare cases where something throws
+   * in a way that our standard catch block cannot see it.
+   */
+  process.on("unhandledRejection", async (error: Error) => {
+    await beccaErrorHandler(
+      Becca,
+      "Unhandled Rejection Error",
+      error,
+      undefined,
+      undefined,
+      undefined
+    );
+  });
+
+  process.on("uncaughtException", async (error) => {
+    await beccaErrorHandler(
+      Becca,
+      "Uncaught Exception Error",
+      error,
+      undefined,
+      undefined,
+      undefined
+    );
+  });
 
   beccaLogHandler.log("debug", "Initialising web server...");
   const server = await createServer(Becca);
@@ -68,9 +83,7 @@ void (async () => {
   beccaLogHandler.log("debug", "Importing commands...");
   const commands = await loadCommands(Becca);
   const contexts = await loadContexts(Becca);
-  Becca.commands = commands;
-  Becca.contexts = contexts;
-  if (!commands.length || !contexts.length) {
+  if (!commands || !contexts) {
     beccaLogHandler.log("error", "failed to import commands.");
     return;
   }
@@ -85,7 +98,7 @@ void (async () => {
   }
 
   beccaLogHandler.log("debug", "Initialising database...");
-  const databaseConnection = await connectDatabase(Becca);
+  const databaseConnection = await connectPrisma(Becca);
   if (!databaseConnection) {
     beccaLogHandler.log("error", "failed to connect to database.");
     return;
@@ -97,19 +110,10 @@ void (async () => {
   beccaLogHandler.log("debug", "Connecting to Discord...");
   await Becca.login(Becca.configs.token);
   beccaLogHandler.log("debug", "Setting activity...");
-  Becca.user?.setActivity("over your guild", {
-    type: "WATCHING",
-  });
-
-  /**
-   * Fallthrough error handlers. These fire in rare cases where something throws
-   * in a way that our standard catch block cannot see it.
-   */
-  process.on("unhandledRejection", async (error: Error) => {
-    await beccaErrorHandler(Becca, "Unhandled Rejection Error", error);
-  });
-
-  process.on("uncaughtException", async (error) => {
-    await beccaErrorHandler(Becca, "Uncaught Exception Error", error);
+  Becca.user?.setActivity({
+    name: "Custom Status",
+    type: ActivityType.Custom,
+    state:
+      "💜 Keeping your community safe! Get support at https://chat.nhcarrigan.com",
   });
 })();

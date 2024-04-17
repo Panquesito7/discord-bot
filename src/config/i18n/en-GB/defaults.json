@@ -1,5 +1,5 @@
 {
-  "donate": "Like the bot? Donate: https://donate.nhcarrigan.com",
+  "footer": "Join our server: https://chat.nhcarrigan.com",
   "moderation": {
     "title": "{{action}} Notification!",
     "desc": "You have received a {{action}} in {{name}} for:",

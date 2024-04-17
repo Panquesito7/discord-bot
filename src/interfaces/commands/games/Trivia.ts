@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 interface TriviaQuestion {
   category: string;
   type: string;

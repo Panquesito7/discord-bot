@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { Listener } from "../interfaces/listeners/Listener";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 
@@ -22,16 +21,8 @@ export const emoteListener: Listener = {
       }
 
       const newContent = message.content
-        // Discord emote syntax
-        ?.replace(/:[^:\s]+:|<:[^:\s]+:[0-9]+>|<a:[^:\s]+:[0-9]+>/g, "")
-        // standard emotes
-        .replace(
-          /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\ufe0f)/g,
-          ""
-        )
+        ?.replace(/<a?:.+?:\d{17,19}>|\p{Extended_Pictographic}/gu, "")
         .replace(/\s/g, "");
-
-      console.log(newContent);
 
       if (newContent?.length) {
         await message.delete();

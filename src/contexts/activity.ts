@@ -1,7 +1,5 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
-import ActivityModel from "../database/models/ActivityModel";
 import { Context } from "../interfaces/contexts/Context";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
@@ -13,10 +11,14 @@ export const activity: Context = {
   },
   run: async (Becca, interaction, t) => {
     try {
-      await interaction.deferReply();
+      await interaction.deferReply({ ephemeral: true });
       const target = interaction.options.getUser("user", true);
 
-      const data = await ActivityModel.findOne({ userId: target.id });
+      const data = await Becca.db.activities.findUnique({
+        where: {
+          userId: target.id,
+        },
+      });
       if (!data) {
         await interaction.editReply(
           "That user has not interacted with me yet..."
@@ -24,36 +26,38 @@ export const activity: Context = {
         return;
       }
 
-      const activityEmbed = new MessageEmbed();
+      const activityEmbed = new EmbedBuilder();
       activityEmbed.setTitle(t("contexts:activity.title"));
-      activityEmbed.addField(
-        t("contexts:activity.buttons"),
-        data.buttons.toString(),
-        true
-      );
-      activityEmbed.addField(
-        t("contexts:activity.commands"),
-        data.commands.toString(),
-        true
-      );
-      activityEmbed.addField(
-        t("contexts:activity.selects"),
-        data.selects.toString(),
-        true
-      );
-      activityEmbed.addField(
-        t("contexts:activity.contexts"),
-        data.contexts.toString(),
-        true
-      );
+      activityEmbed.addFields([
+        {
+          name: t("contexts:activity.buttons"),
+          value: data.buttons.toString(),
+          inline: true,
+        },
+        {
+          name: t("contexts:activity.commands"),
+          value: data.commands.toString(),
+          inline: true,
+        },
+        {
+          name: t("contexts:activity.selects"),
+          value: data.selects.toString(),
+          inline: true,
+        },
+        {
+          name: t("contexts:activity.contexts"),
+          value: data.contexts.toString(),
+          inline: true,
+        },
+      ]);
       activityEmbed.setColor(Becca.colours.default);
       activityEmbed.setAuthor({
         name: target.tag,
         iconURL: target.displayAvatarURL(),
       });
       activityEmbed.setFooter({
-        text: t("defaults:donate"),
-        iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
+        text: t("defaults:footer"),
+        iconURL: "https://cdn.nhcarrigan.com/profile.png",
       });
 
       await interaction.editReply({ embeds: [activityEmbed] });

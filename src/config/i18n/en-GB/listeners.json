@@ -1,5 +1,15 @@
 {
   "automod": {
+    "antiphish": {
+      "dm": "A scam link was detected in one of your messages. Please reset your password.",
+      "reason": "scam links",
+      "title": "Scam detected!",
+      "description": "A scam link was detected in the server.",
+      "user": "User",
+      "link": "Link",
+      "action": "Action",
+      "source": "Detection Source"
+    },
     "links": {
       "title": "Invalid link detected!",
       "dmTitle": "Your message has been deleted...",

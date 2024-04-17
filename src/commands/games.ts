@@ -1,34 +1,34 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleFact } from "../modules/commands/subcommands/games/handleFact";
-import { handleHabitica } from "../modules/commands/subcommands/games/handleHabitica";
-import { handleJoke } from "../modules/commands/subcommands/games/handleJoke";
-import { handleMtg } from "../modules/commands/subcommands/games/handleMtg";
-import { handleSlime } from "../modules/commands/subcommands/games/handleSlime";
-import { handleSus } from "../modules/commands/subcommands/games/handleSus";
-import { handleTrivia } from "../modules/commands/subcommands/games/handleTrivia";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleFact } from "./subcommands/games/handleFact";
+import { handleMtg } from "./subcommands/games/handleMtg";
+import { handleSlime } from "./subcommands/games/handleSlime";
+import { handleSus } from "./subcommands/games/handleSus";
+import { handleTrivia } from "./subcommands/games/handleTrivia";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: CommandHandler } = {
+  fact: handleFact,
+  mtg: handleMtg,
+  sus: handleSus,
+  trivia: handleTrivia,
+  slime: handleSlime,
+};
 
 export const games: Command = {
   data: new SlashCommandBuilder()
     .setName("games")
     .setDescription("Fun and silly commands!")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("fact")
         .setDescription("Provides a random fun fact.")
-    )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName("joke")
-        .setDescription("Tells a random joke.")
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
@@ -57,52 +57,14 @@ export const games: Command = {
       new SlashCommandSubcommandBuilder()
         .setName("slime")
         .setDescription("Gives you a slime name!")
-    )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName("habitica")
-        .setDescription("Returns information on a Habitica user.")
-        .addStringOption((option) =>
-          option
-            .setName("id")
-            .setDescription("Example: 285a3335-33b9-473f-8d80-085c04f207bc")
-            .setRequired(true)
-        )
     ),
   run: async (Becca, interaction, t, config) => {
     try {
       await interaction.deferReply();
 
       const subCommand = interaction.options.getSubcommand();
-      switch (subCommand) {
-        case "fact":
-          await handleFact(Becca, interaction, t, config);
-          break;
-        case "joke":
-          await handleJoke(Becca, interaction, t, config);
-          break;
-        case "mtg":
-          await handleMtg(Becca, interaction, t, config);
-          break;
-        case "sus":
-          await handleSus(Becca, interaction, t, config);
-          break;
-        case "trivia":
-          await handleTrivia(Becca, interaction, t, config);
-          break;
-        case "slime":
-          await handleSlime(Becca, interaction, t, config);
-          break;
-        case "habitica":
-          await handleHabitica(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subCommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

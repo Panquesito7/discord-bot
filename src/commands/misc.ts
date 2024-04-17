@@ -1,25 +1,36 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleLanguage } from "../modules/commands/subcommands/misc/handleLanguage";
-import { handleLevelscale } from "../modules/commands/subcommands/misc/handleLevelscale";
-import { handleOrbit } from "../modules/commands/subcommands/misc/handleOrbit";
-import { handlePermissions } from "../modules/commands/subcommands/misc/handlePermissions";
-import { handleSpace } from "../modules/commands/subcommands/misc/handleSpace";
-import { handleUsername } from "../modules/commands/subcommands/misc/handleUsername";
-import { handleXkcd } from "../modules/commands/subcommands/misc/handleXkcd";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+import { handleEcho } from "./subcommands/misc/handleEcho";
+import { handleLanguage } from "./subcommands/misc/handleLanguage";
+import { handleLevelscale } from "./subcommands/misc/handleLevelscale";
+import { handlePermissions } from "./subcommands/misc/handlePermissions";
+import { handleSpace } from "./subcommands/misc/handleSpace";
+import { handleUsername } from "./subcommands/misc/handleUsername";
+import { handleXkcd } from "./subcommands/misc/handleXkcd";
+
+const handlers: { [key: string]: CommandHandler } = {
+  space: handleSpace,
+  username: handleUsername,
+  xkcd: handleXkcd,
+  permissions: handlePermissions,
+  levelscale: handleLevelscale,
+  language: handleLanguage,
+  echo: handleEcho,
+};
+
+const ephemerals = ["echo"];
 
 export const misc: Command = {
   data: new SlashCommandBuilder()
     .setName("misc")
     .setDescription("Miscellaneous commands that do not fit other categories")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("space")
@@ -28,6 +39,19 @@ export const misc: Command = {
           option
             .setName("date")
             .setDescription("Date of the photo to fetch, in YYYY-MM-DD format.")
+        )
+    )
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
+        .setName("echo")
+        .setDescription(
+          "Tell Becca to send a specific message in this channel."
+        )
+        .addStringOption((option) =>
+          option
+            .setName("message")
+            .setDescription("The message you want Becca to send.")
+            .setRequired(true)
         )
     )
     .addSubcommand(
@@ -68,13 +92,6 @@ export const misc: Command = {
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
-        .setName("orbit")
-        .setDescription(
-          "Provides a leaderboard for global activity within nhcommunity."
-        )
-    )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
         .setName("language")
         .setDescription(
           "Provides your configured language information (in Discord)."
@@ -82,39 +99,13 @@ export const misc: Command = {
     ),
   run: async (Becca, interaction, t, config) => {
     try {
-      await interaction.deferReply();
+      await interaction.deferReply({
+        ephemeral: ephemerals.includes(interaction.options.getSubcommand()),
+      });
 
       const subCommand = interaction.options.getSubcommand();
-
-      switch (subCommand) {
-        case "space":
-          await handleSpace(Becca, interaction, t, config);
-          break;
-        case "username":
-          await handleUsername(Becca, interaction, t, config);
-          break;
-        case "xkcd":
-          await handleXkcd(Becca, interaction, t, config);
-          break;
-        case "permissions":
-          await handlePermissions(Becca, interaction, t, config);
-          break;
-        case "levelscale":
-          await handleLevelscale(Becca, interaction, t, config);
-          break;
-        case "orbit":
-          await handleOrbit(Becca, interaction, t, config);
-          break;
-        case "language":
-          await handleLanguage(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subCommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

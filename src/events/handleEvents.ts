@@ -1,7 +1,9 @@
 import { BeccaLyria } from "../interfaces/BeccaLyria";
 
+import { autoModerationActionExecution } from "./automodEvents/autoModerationActionExecution";
 import { disconnect } from "./clientEvents/disconnect";
 import { ready } from "./clientEvents/ready";
+import { guildAuditLogEntryCreate } from "./guildEvents/guildAuditLogEntryCreate";
 import { guildCreate } from "./guildEvents/guildCreate";
 import { guildDelete } from "./guildEvents/guildDelete";
 import { interactionCreate } from "./interactionEvents/interactionCreate";
@@ -11,13 +13,13 @@ import { memberUpdate } from "./memberEvents/memberUpdate";
 import { messageCreate } from "./messageEvents/messageCreate";
 import { messageDelete } from "./messageEvents/messageDelete";
 import { messageUpdate } from "./messageEvents/messageUpdate";
-import { reactionAdd } from "./reactionEvents.ts/reactionAdd";
-import { reactionRemove } from "./reactionEvents.ts/reactionRemove";
+import { reactionAdd } from "./reactionEvents/reactionAdd";
 import { shardError } from "./shardEvents/shardError";
 import { shardReady } from "./shardEvents/shardReady";
 import { threadCreate } from "./threadEvents/threadCreate";
 import { threadDelete } from "./threadEvents/threadDelete";
 import { threadUpdate } from "./threadEvents/threadUpdate";
+import { userUpdate } from "./userEvents/userUpdate";
 import { voiceStateUpdate } from "./voiceEvents/voiceStateUpdate";
 
 /**
@@ -60,6 +62,9 @@ export const handleEvents = (Becca: BeccaLyria): void => {
   Becca.on("guildMemberUpdate", async (oldMember, newMember) => {
     await memberUpdate(Becca, oldMember, newMember);
   });
+  Becca.on("userUpdate", async (oldUser, newUser) => {
+    await userUpdate(Becca, oldUser, newUser);
+  });
 
   Becca.on("ready", async () => {
     await ready(Becca);
@@ -82,14 +87,18 @@ export const handleEvents = (Becca: BeccaLyria): void => {
     await threadDelete(Becca, thread);
   });
 
-  Becca.on("messageReactionAdd", async (reaction, user) => {
-    await reactionAdd(Becca, reaction, user);
-  });
-  Becca.on("messageReactionRemove", async (reaction, user) => {
-    await reactionRemove(Becca, reaction, user);
-  });
-
   Becca.on("interactionCreate", async (interaction) => {
     await interactionCreate(Becca, interaction);
+  });
+
+  Becca.on("messageReactionAdd", async (reaction) => {
+    await reactionAdd(Becca, reaction);
+  });
+
+  Becca.on("guildAuditLogEntryCreate", async (entry, guild) => {
+    await guildAuditLogEntryCreate(Becca, entry, guild);
+  });
+  Becca.on("autoModerationActionExecution", async (action) => {
+    await autoModerationActionExecution(Becca, action);
   });
 };

@@ -1,5 +1,5 @@
-/* eslint-disable camelcase */
 import { LevelRole } from "../../interfaces/settings/LevelRole";
+import { Trigger } from "../../interfaces/settings/Trigger";
 
 /**
  * This config maps the default values for the ServerModel document. Useful
@@ -15,8 +15,7 @@ export const defaultServer = {
     "Hello {@username}! Welcome to {@servername}! My name is Becca. Feel free to let me know if you need anything.",
   hearts: [] as string[],
   blocked: [] as string[],
-  self_roles: [] as string[],
-  triggers: [] as [string, string][],
+  new_triggers: [] as Trigger[],
   automod_channels: [] as string[],
   no_automod_channels: [] as string[],
   automod_roles: [] as string[],
@@ -41,4 +40,17 @@ export const defaultServer = {
     "{@username}, your message appears to have been inappropriate. I removed it.",
   emote_channels: [] as string[],
   appeal_link: "",
+  antiphish: "none",
+  initial_xp: "0",
+  level_style: "embed",
+  level_message: "",
+  role_message: "",
+  welcome_style: "embed",
+  ticket_category: "",
+  ticket_log_channel: "",
+  ticket_role: "",
+  starboard_emote: "",
+  starboard_channel: "",
+  starboard_threshold: 5,
+  level_decay: 0,
 };

@@ -1,17 +1,17 @@
-/* eslint-disable jsdoc/no-undefined-types */
-import * as Sentry from "@sentry/node";
+import { captureException } from "@sentry/node";
 import {
   CommandInteraction,
-  ContextMenuInteraction,
+  ContextMenuCommandInteraction,
+  EmbedBuilder,
   Message,
-  MessageEmbed,
+  SnowflakeUtil,
 } from "discord.js";
-import { Types } from "mongoose";
 
 import { BeccaLyria } from "../interfaces/BeccaLyria";
 
 import { beccaLogHandler } from "./beccaLogHandler";
 import { customSubstring } from "./customSubstring";
+import { debugLogger } from "./debugLogger";
 
 /**
  * Takes the error object generated within the code, passes it to Sentry and logs the
@@ -23,8 +23,8 @@ import { customSubstring } from "./customSubstring";
  * @param {unknown} err The standard error object (generated in a catch statement).
  * @param {string | undefined} guild The name of the guild that triggered the issue.
  * @param {Message | undefined} message Optional message that triggered the issue.
- * @param { CommandInteraction | ContextMenuInteraction | undefined } interaction Optional interaction that triggered the issue.
- * @returns {Types.ObjectId} A unique ID for the error.
+ * @param { CommandInteraction | ContextMenuCommandInteraction | undefined } interaction Optional interaction that triggered the issue.
+ * @returns {string} A unique ID for the error.
  */
 export const beccaErrorHandler = async (
   Becca: BeccaLyria,
@@ -32,11 +32,8 @@ export const beccaErrorHandler = async (
   err: unknown,
   guild?: string,
   message?: Message,
-  interaction?: CommandInteraction | ContextMenuInteraction
-): Promise<Types.ObjectId> => {
-  if (Becca.pm2.metrics.errors) {
-    Becca.pm2.metrics.errors.mark();
-  }
+  interaction?: CommandInteraction | ContextMenuCommandInteraction
+): Promise<string> => {
   const error = err as Error;
   beccaLogHandler.log("error", `There was an error in the ${context}:`);
   beccaLogHandler.log(
@@ -44,51 +41,67 @@ export const beccaErrorHandler = async (
     JSON.stringify({ errorMessage: error.message, errorStack: error.stack })
   );
 
-  Sentry.captureException(error);
+  captureException(error);
 
-  const errorId = new Types.ObjectId();
-  const errorEmbed = new MessageEmbed();
+  const errorId = SnowflakeUtil.generate({ timestamp: Date.now() }).toString();
+  const errorEmbed = new EmbedBuilder();
   errorEmbed.setTitle(
-    `${context} error ${guild ? "in " + guild : "from an unknown source"}.`
+    `${context} error ${guild ? `in ${guild}` : "from an unknown source"}.`
   );
   errorEmbed.setColor(Becca.colours.error);
   errorEmbed.setDescription(customSubstring(error.message, 2000));
-  errorEmbed.addField(
-    "Stack Trace:",
-    `\`\`\`\n${customSubstring(error.stack || "null", 1000)}\n\`\`\``
-  );
-  errorEmbed.addField("Error ID", errorId.toHexString());
+  errorEmbed.addFields([
+    {
+      name: "Stack Trace:",
+      value: `\`\`\`\n${customSubstring(error.stack || "null", 1000)}\n\`\`\``,
+    },
+    { name: "Error ID:", value: errorId },
+  ]);
   errorEmbed.setTimestamp();
   if (message) {
-    errorEmbed.addField(
-      "Message Content:",
-      customSubstring(message.content, 1000)
-    );
+    errorEmbed.addFields([
+      {
+        name: "Message Content:",
+        value: customSubstring(message.content, 1000),
+      },
+    ]);
   }
 
   if (interaction) {
-    errorEmbed.addField(
-      "Interaction Details",
-      customSubstring(
-        `${interaction.commandName} ${
-          interaction.isCommand()
-            ? interaction.options.getSubcommand() || ""
-            : ""
-        }`,
-        1000
-      )
-    );
-    errorEmbed.addField(
-      "Interaction Options",
-      customSubstring(
-        interaction.options.data[0].options
-          ?.map((o) => `\`${o.name}\`: ${o.value}`)
-          .join(", ") || "no options",
-        1000
-      )
-    );
+    errorEmbed.addFields([
+      {
+        name: "Interaction Details",
+        value: customSubstring(
+          `${interaction.commandName} ${
+            interaction.isChatInputCommand()
+              ? interaction.options.getSubcommand() || ""
+              : ""
+          }`,
+          1000
+        ),
+      },
+      {
+        name: "Interaction Options",
+        value: customSubstring(
+          interaction.options.data[0].options
+            ?.map((o) => `\`${o.name}\`: ${o.value}`)
+            .join(", ") || "no options",
+          1000
+        ),
+      },
+    ]);
   }
-  await Becca.debugHook.send({ embeds: [errorEmbed] });
+  await Becca.debugHook.send({
+    embeds: [errorEmbed],
+    username: Becca.user?.username ?? "Becca",
+    avatarURL:
+      Becca.user?.displayAvatarURL() ??
+      "https://cdn.nhcarrigan.com/avatars/nhcarrigan.png",
+  });
+
+  if (guild) {
+    debugLogger(context, error.message, guild);
+  }
 
   return errorId;
 };

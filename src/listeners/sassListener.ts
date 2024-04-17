@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { Listener } from "../interfaces/listeners/Listener";
 import { sassAmirite } from "../modules/listeners/sass/sassAmirite";
 import { sassGreeting } from "../modules/listeners/sass/sassGreeting";

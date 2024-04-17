@@ -1,32 +1,70 @@
-/**
- * A list of colour strings for the Among Us game.
- */
-export const SusNames = [
-  "red",
-  "blue",
-  "green",
-  "pink",
-  "orange",
-  "yellow",
-  "black",
-  "white",
-  "purple",
-  "brown",
-  "cyan",
-  "lime",
-  "tan",
-  "grey",
-  "rose",
-  "coral",
-  "banana",
-];
-
-/**
- * A list of colour hexadecimal codes for the Among Us game. Note that
- * these need to be hexadecimal numbers, not hexcode strings.
- */
-export const SusColours = [
-  0xf50101, 0x021edb, 0x147d2a, 0xee52b9, 0xf07d07, 0xf2f254, 0x3d464c,
-  0xd9e2ef, 0x6a1bcb, 0x70491e, 0x28feee, 0x4def3b, 0x928776, 0x738491,
-  0xefc3cf, 0xd76464, 0xfffebe,
+export const SusList: { name: string; colour: number }[] = [
+  {
+    name: "red",
+    colour: 0xf50101,
+  },
+  {
+    name: "blue",
+    colour: 0x021edb,
+  },
+  {
+    name: "green",
+    colour: 0x147d2a,
+  },
+  {
+    name: "pink",
+    colour: 0xee52b9,
+  },
+  {
+    name: "orange",
+    colour: 0xf07d07,
+  },
+  {
+    name: "yellow",
+    colour: 0xf2f254,
+  },
+  {
+    name: "black",
+    colour: 0x3d464c,
+  },
+  {
+    name: "white",
+    colour: 0xd9e2ef,
+  },
+  {
+    name: "purple",
+    colour: 0x6a1bcb,
+  },
+  {
+    name: "brown",
+    colour: 0x70491e,
+  },
+  {
+    name: "cyan",
+    colour: 0x28feee,
+  },
+  {
+    name: "lime",
+    colour: 0x4def3b,
+  },
+  {
+    name: "tan",
+    colour: 0x928776,
+  },
+  {
+    name: "grey",
+    colour: 0x738491,
+  },
+  {
+    name: "rose",
+    colour: 0xefc3cf,
+  },
+  {
+    name: "coral",
+    colour: 0xd76464,
+  },
+  {
+    name: "banana",
+    colour: 0xfffebe,
+  },
 ];

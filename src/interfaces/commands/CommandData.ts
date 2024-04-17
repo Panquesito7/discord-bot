@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 export interface CommandData {
   id: string;
   application_id: string;

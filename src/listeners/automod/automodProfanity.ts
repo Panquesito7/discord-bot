@@ -1,6 +1,5 @@
-/* eslint-disable jsdoc/require-param */
-import { MessageEmbed } from "discord.js";
-import * as filter from "leo-profanity";
+import Filter from "bad-words";
+import { EmbedBuilder } from "discord.js";
 
 import { defaultServer } from "../../config/database/defaultServer";
 import { ListenerHandler } from "../../interfaces/listeners/ListenerHandler";
@@ -17,7 +16,8 @@ export const automodProfanity: ListenerHandler = async (
   config
 ) => {
   try {
-    if (!filter.check(message.content)) {
+    const filter = new Filter();
+    if (!filter.isProfane(message.content)) {
       return;
     }
 
@@ -26,7 +26,7 @@ export const automodProfanity: ListenerHandler = async (
       2000
     ).replace(/\{@username\}/g, `<@!${message.author.id}>`);
 
-    const embed = new MessageEmbed();
+    const embed = new EmbedBuilder();
     embed.setTitle(t("listeners:automod.profanity.title"));
     embed.setDescription(string);
     embed.setColor(Becca.colours.error);
@@ -36,36 +36,36 @@ export const automodProfanity: ListenerHandler = async (
     });
     embed.setTimestamp();
     embed.setFooter({
-      text: t("defaults:donate"),
-      iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
+      text: t("defaults:footer"),
+      iconURL: "https://cdn.nhcarrigan.com/profile.png",
     });
 
     await message.delete();
     const warning = await message.channel.send({ embeds: [embed] });
 
-    const dmEmbed = new MessageEmbed();
+    const dmEmbed = new EmbedBuilder();
     dmEmbed.setTitle(t("listeners:automod.profanity.dmTitle"));
     dmEmbed.setURL(warning.url);
     dmEmbed.setDescription(
       `${t("listeners:automod.profanity.dmDesc")}\n\`\`\`\n${filter.clean(
-        message.content,
-        "*",
-        2
+        message.content
       )}\n\`\`\``
     );
     dmEmbed.setColor(Becca.colours.error);
-    dmEmbed.addField(
-      t("listeners:automod.profanity.reason"),
-      message.guild?.name || "unknown"
-    );
-    dmEmbed.addField(
-      t("listeners:automod.profanity.channel"),
-      message.channel.toString()
-    );
-    dmEmbed.addField(
-      t("listeners:automod.profanity.reason"),
-      t("listeners:automod.profanity.profane")
-    );
+    dmEmbed.addFields([
+      {
+        name: t("listeners:automod.profanity.reason"),
+        value: message.guild?.name || "unknown",
+      },
+      {
+        name: t("listeners:automod.profanity.channel"),
+        value: message.channel.toString(),
+      },
+      {
+        name: t("listeners:automod.profanity.reason"),
+        value: t("listeners:automod.profanity.profane"),
+      },
+    ]);
 
     await message.author.send({ embeds: [dmEmbed] }).catch(() => null);
   } catch (error) {

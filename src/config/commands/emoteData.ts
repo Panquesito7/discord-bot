@@ -1,11 +1,13 @@
-export const emoteChoices: [string, EmoteAction][] = [
-  ["Give them a hug!", "hug"],
-  ["Give them a kiss!", "kiss"],
-  ["Smack them around a bit.", "smack"],
-  ["Boop them on the nose!", "boop"],
-  ["Throw something at them.", "throw"],
-  ["Pat them on the head.", "pat"],
-  ["Go UwU at them", "uwu"],
+import { APIApplicationCommandOptionChoice } from "discord.js";
+
+export const emoteChoices: APIApplicationCommandOptionChoice<EmoteAction>[] = [
+  { name: "Give them a hug!", value: "hug" },
+  { name: "Give them a kiss!", value: "kiss" },
+  { name: "Smack them around a bit.", value: "smack" },
+  { name: "Boop them on the nose!", value: "boop" },
+  { name: "Throw something at them.", value: "throw" },
+  { name: "Pat them on the head.", value: "pat" },
+  { name: "Go UwU at them", value: "uwu" },
 ];
 
 export const throwList = [

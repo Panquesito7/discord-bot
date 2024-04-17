@@ -1,4 +1,4 @@
-import { MessageEmbed, ThreadChannel } from "discord.js";
+import { EmbedBuilder, ThreadChannel } from "discord.js";
 import { getFixedT } from "i18next";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
@@ -20,8 +20,8 @@ export const threadUpdate = async (
   try {
     const lang = newThread.guild.preferredLocale;
     const t = getFixedT(lang);
-    const threadEmbed = new MessageEmbed();
-    threadEmbed.setFooter(`ID: ${oldThread.id}`);
+    const threadEmbed = new EmbedBuilder();
+    threadEmbed.setFooter({ text: `ID: ${oldThread.id}` });
     threadEmbed.setTimestamp();
     threadEmbed.setColor(Becca.colours.warning);
 
@@ -48,7 +48,6 @@ export const threadUpdate = async (
       await sendLogEmbed(Becca, newThread.guild, threadEmbed, "thread_events");
       return;
     }
-    Becca.pm2.metrics.events.mark();
   } catch (err) {
     await beccaErrorHandler(Becca, "thread update event", err);
   }

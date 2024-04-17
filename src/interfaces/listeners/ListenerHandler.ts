@@ -1,12 +1,12 @@
-import { Message } from "discord.js";
+import { servers } from "@prisma/client";
 import { TFunction } from "i18next";
 
 import { BeccaLyria } from "../BeccaLyria";
-import { ServerConfig } from "../database/ServerConfig";
+import { ValidatedMessage } from "../discord/ValidatedMessage";
 
 export type ListenerHandler = (
   Becca: BeccaLyria,
-  message: Message,
+  message: ValidatedMessage,
   t: TFunction,
-  config: ServerConfig
-) => Promise<void>;
+  config: servers
+) => Promise<void | boolean>;

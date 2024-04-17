@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { Listener } from "../interfaces/listeners/Listener";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 
@@ -7,11 +6,11 @@ export const triggerListener: Listener = {
   description: "Handles the logic for a server's triggers.",
   run: async (Becca, message, t, config) => {
     try {
-      if (!config.triggers?.length) {
+      if (!config.new_triggers?.length) {
         return;
       }
 
-      for (const [trigger, response] of config.triggers) {
+      for (const { trigger, response } of config.new_triggers) {
         if (message.content === trigger) {
           await message.channel.send(response);
           break;

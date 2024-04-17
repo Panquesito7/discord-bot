@@ -1,11 +1,7 @@
-import { Guild, MessageEmbed } from "discord.js";
+import { Guild, EmbedBuilder } from "discord.js";
 
-import CommandCountModel from "../../database/models/CommandCountModel";
-import HistoryModel from "../../database/models/HistoryModel";
-import LevelModel from "../../database/models/LevelModel";
-import ServerModel from "../../database/models/ServerConfigModel";
-import StarModel from "../../database/models/StarModel";
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
+import { FetchWrapper } from "../../utils/FetchWrapper";
 
 /**
  * Sends a notification to the debug hook when Becca leaves a server. Also cleans up
@@ -18,37 +14,74 @@ export const guildDelete = async (
   Becca: BeccaLyria,
   guild: Guild
 ): Promise<void> => {
-  const owner = await guild.members.fetch(guild.ownerId).catch(() => null);
-  const guildDeleteEmbed = new MessageEmbed();
+  const owner = await FetchWrapper.member(guild, guild.ownerId);
+  const guildDeleteEmbed = new EmbedBuilder();
   guildDeleteEmbed.setTitle(
     `${Becca.user?.username || "Becca Lyria"} has been dismissed from a guild!`
   );
   guildDeleteEmbed.setDescription(
     "It would seem they no longer need my assistance."
   );
-  guildDeleteEmbed.addField("Guild Name", guild.name, true);
-  guildDeleteEmbed.addField(
-    "Guild Owner",
-    owner?.user.username || "No owner data available.",
-    true
-  );
-  guildDeleteEmbed.addField("Guild ID", guild.id, true);
-  guildDeleteEmbed.addField(
-    "Guild Owner ID",
-    guild.ownerId || "No owner data available",
-    true
-  );
+  guildDeleteEmbed.addFields([
+    {
+      name: "Guild Name",
+      value: guild.name,
+      inline: true,
+    },
+    {
+      name: "Guild Owner",
+      value: owner?.user.username || "No owner data available.",
+      inline: true,
+    },
+    {
+      name: "Guild ID",
+      value: guild.id,
+      inline: true,
+    },
+    {
+      name: "Guild Owner ID",
+      value: guild.ownerId || "No owner data available",
+      inline: true,
+    },
+  ]);
+
   guildDeleteEmbed.setColor(Becca.colours.warning);
   guildDeleteEmbed.setTimestamp();
 
-  await Becca.debugHook.send({ embeds: [guildDeleteEmbed] });
+  await Becca.debugHook.send({
+    embeds: [guildDeleteEmbed],
+    username: Becca.user?.username ?? "Becca",
+    avatarURL:
+      Becca.user?.displayAvatarURL() ??
+      "https://cdn.nhcarrigan.com/avatars/nhcarrigan.png",
+  });
 
-  await ServerModel.findOneAndDelete({ serverID: guild.id });
-  await LevelModel.deleteMany({ serverID: guild.id });
-  await StarModel.findOneAndDelete({ serverID: guild.id });
-  await CommandCountModel.findOneAndDelete({ serverId: guild.id });
-  await HistoryModel.deleteMany({ serverId: guild.id });
-
-  Becca.pm2.metrics.guilds.set(Becca.pm2.metrics.guilds.val() - 1);
-  Becca.pm2.metrics.events.mark();
+  await Becca.db.servers
+    .delete({
+      where: {
+        serverID: guild.id,
+      },
+    })
+    .catch(() => null);
+  await Becca.db.newlevels
+    .deleteMany({
+      where: {
+        serverID: guild.id,
+      },
+    })
+    .catch(() => null);
+  await Becca.db.starcounts
+    .delete({
+      where: {
+        serverID: guild.id,
+      },
+    })
+    .catch(() => null);
+  await Becca.db.histories
+    .deleteMany({
+      where: {
+        serverId: guild.id,
+      },
+    })
+    .catch(() => null);
 };

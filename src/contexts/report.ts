@@ -1,18 +1,11 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import { User } from "@sentry/types";
-import {
-  Guild,
-  GuildChannel,
-  Message,
-  MessageEmbed,
-  TextChannel,
-} from "discord.js";
+import { ChannelType, EmbedBuilder, Message } from "discord.js";
 
 import { Context } from "../interfaces/contexts/Context";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 import { customSubstring } from "../utils/customSubstring";
-import { getRandomValue } from "../utils/getRandomValue";
+import { FetchWrapper } from "../utils/FetchWrapper";
+import { tFunctionArrayWrapper } from "../utils/tFunctionWrapper";
 
 export const report: Context = {
   data: {
@@ -22,28 +15,29 @@ export const report: Context = {
   run: async (Becca, interaction, t, config) => {
     try {
       await interaction.deferReply({ ephemeral: true });
-      const guild = interaction.guild as Guild;
+      const { guild } = interaction;
       const message = interaction.options.getMessage("message") as Message;
 
-      if (!guild || !message) {
+      if (!message || message.channel.type === ChannelType.DM) {
         await interaction.editReply({
-          content: getRandomValue(t("responses:missingGuild")),
+          content: tFunctionArrayWrapper(t, "responses:missingGuild"),
         });
         return;
       }
 
-      const reportChannel = (await guild.channels.fetch(
+      const reportChannel = await FetchWrapper.channel(
+        guild,
         config.report_channel
-      )) as TextChannel;
+      );
 
-      if (!reportChannel || !config.report_channel) {
+      if (!reportChannel?.isTextBased() || !config.report_channel) {
         await interaction.editReply(t("contexts:report.notEnabled"));
         return;
       }
 
-      const author = message.author as User;
+      const author = message.author;
 
-      const reportEmbed = new MessageEmbed();
+      const reportEmbed = new EmbedBuilder();
       reportEmbed.setTitle(t("contexts:report.title"));
       reportEmbed.setDescription(
         `${customSubstring(message.content || "no content found!", 4000)}`
@@ -53,15 +47,21 @@ export const report: Context = {
         iconURL: author.displayAvatarURL(),
       });
       reportEmbed.setColor(Becca.colours.default);
-      reportEmbed.addField(
-        "Channel",
-        (message.channel as GuildChannel).name,
-        true
-      );
-      reportEmbed.addField("Link", message.url, true);
+      reportEmbed.addFields([
+        {
+          name: "Channel",
+          value: message.channel.name,
+          inline: true,
+        },
+        {
+          name: "Link",
+          value: message.url,
+          inline: true,
+        },
+      ]);
       reportEmbed.setFooter({
-        text: t("defaults:donate"),
-        iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
+        text: t("defaults:footer"),
+        iconURL: "https://cdn.nhcarrigan.com/profile.png",
       });
 
       await reportChannel.send({
@@ -71,7 +71,6 @@ export const report: Context = {
         embeds: [reportEmbed],
       });
       await interaction.editReply(t("contexts:report.success"));
-      reportEmbed.addField("Link", message.url);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

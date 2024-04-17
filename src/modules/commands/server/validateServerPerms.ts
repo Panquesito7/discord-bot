@@ -1,4 +1,9 @@
-import { GuildMember, MessageEmbed, TextBasedChannel } from "discord.js";
+import {
+  EmbedBuilder,
+  GuildMember,
+  PermissionFlagsBits,
+  TextBasedChannel,
+} from "discord.js";
 import { TFunction } from "i18next";
 
 import { BeccaLyria } from "../../../interfaces/BeccaLyria";
@@ -20,26 +25,56 @@ export const validateServerPerms = async (
   channel: TextBasedChannel
 ): Promise<boolean> => {
   try {
-    const manageServer = BeccaMember.permissions.has("MANAGE_GUILD");
-    const manageRoles = BeccaMember.permissions.has("MANAGE_ROLES");
-    const manageChannels = BeccaMember.permissions.has("MANAGE_CHANNELS");
-    const kickMembers = BeccaMember.permissions.has("KICK_MEMBERS");
-    const banMembers = BeccaMember.permissions.has("BAN_MEMBERS");
-    const sendMessages = BeccaMember.permissions.has("SEND_MESSAGES");
-    const manageMessages = BeccaMember.permissions.has("MANAGE_MESSAGES");
-    const embedLinks = BeccaMember.permissions.has("EMBED_LINKS");
-    const attachFiles = BeccaMember.permissions.has("ATTACH_FILES");
-    const readMessageHistory = BeccaMember.permissions.has(
-      "READ_MESSAGE_HISTORY"
+    const manageServer = BeccaMember.permissions.has(
+      PermissionFlagsBits.ManageGuild
     );
-    const addReactions = BeccaMember.permissions.has("ADD_REACTIONS");
-    const useEmotes = BeccaMember.permissions.has("USE_EXTERNAL_EMOJIS");
-    const manageNicknames = BeccaMember.permissions.has("MANAGE_NICKNAMES");
-    const moderateMembers = BeccaMember.permissions.has("MODERATE_MEMBERS");
-    const viewChannel = BeccaMember.permissions.has("VIEW_CHANNEL");
-    const readMessages = BeccaMember.permissions.has("READ_MESSAGE_HISTORY");
+    const manageRoles = BeccaMember.permissions.has(
+      PermissionFlagsBits.ManageRoles
+    );
+    const manageChannels = BeccaMember.permissions.has(
+      PermissionFlagsBits.ManageChannels
+    );
+    const kickMembers = BeccaMember.permissions.has(
+      PermissionFlagsBits.KickMembers
+    );
+    const banMembers = BeccaMember.permissions.has(
+      PermissionFlagsBits.BanMembers
+    );
+    const sendMessages = BeccaMember.permissions.has(
+      PermissionFlagsBits.SendMessages
+    );
+    const manageMessages = BeccaMember.permissions.has(
+      PermissionFlagsBits.ManageMessages
+    );
+    const embedLinks = BeccaMember.permissions.has(
+      PermissionFlagsBits.EmbedLinks
+    );
+    const attachFiles = BeccaMember.permissions.has(
+      PermissionFlagsBits.AttachFiles
+    );
+    const readMessageHistory = BeccaMember.permissions.has(
+      PermissionFlagsBits.ReadMessageHistory
+    );
+    const addReactions = BeccaMember.permissions.has(
+      PermissionFlagsBits.AddReactions
+    );
+    const useEmotes = BeccaMember.permissions.has(
+      PermissionFlagsBits.UseExternalEmojis
+    );
+    const manageNicknames = BeccaMember.permissions.has(
+      PermissionFlagsBits.ManageNicknames
+    );
+    const moderateMembers = BeccaMember.permissions.has(
+      PermissionFlagsBits.ModerateMembers
+    );
+    const viewChannel = BeccaMember.permissions.has(
+      PermissionFlagsBits.ViewChannel
+    );
+    const readMessages = BeccaMember.permissions.has(
+      PermissionFlagsBits.ReadMessageHistory
+    );
 
-    const permissionEmbed = new MessageEmbed();
+    const permissionEmbed = new EmbedBuilder();
     permissionEmbed.setTitle(t("commands:misc.permissions.guild.title"));
     permissionEmbed.setDescription(
       t("commands:misc.permissions.guild.description")
@@ -128,7 +163,7 @@ export const validateServerPerms = async (
     ]);
     permissionEmbed.setColor(Becca.colours.default);
     permissionEmbed.setTimestamp();
-    permissionEmbed.setFooter(`ID: ${BeccaMember.guild.id}`);
+    permissionEmbed.setFooter({ text: `ID: ${BeccaMember.guild.id}` });
 
     await channel.send({ embeds: [permissionEmbed] });
 

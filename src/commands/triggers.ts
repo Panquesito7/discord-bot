@@ -1,22 +1,31 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import {
+  PermissionFlagsBits,
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
-import { GuildMember } from "discord.js";
+} from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleTriggerAdd } from "../modules/commands/subcommands/triggers/handleTriggerAdd";
-import { handleTriggerRemove } from "../modules/commands/subcommands/triggers/handleTriggerRemove";
-import { handleTriggerView } from "../modules/commands/subcommands/triggers/handleTriggerView";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+import { tFunctionArrayWrapper } from "../utils/tFunctionWrapper";
+
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+import { handleTriggerAdd } from "./subcommands/triggers/handleTriggerAdd";
+import { handleTriggerRemove } from "./subcommands/triggers/handleTriggerRemove";
+import { handleTriggerView } from "./subcommands/triggers/handleTriggerView";
+
+const handlers: { [key: string]: CommandHandler } = {
+  add: handleTriggerAdd,
+  remove: handleTriggerRemove,
+  view: handleTriggerView,
+};
 
 export const triggers: Command = {
   data: new SlashCommandBuilder()
     .setName("triggers")
     .setDescription("Manage triggers for your server.")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("add")
@@ -57,31 +66,15 @@ export const triggers: Command = {
       const subcommand = interaction.options.getSubcommand();
 
       if (
-        !(interaction.member as GuildMember).permissions.has("MANAGE_GUILD")
+        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)
       ) {
         await interaction.editReply({
-          content: getRandomValue(t("responses:noPermission")),
+          content: tFunctionArrayWrapper(t, "responses:noPermission"),
         });
         return;
       }
-
-      switch (subcommand) {
-        case "add":
-          await handleTriggerAdd(Becca, interaction, t, config);
-          break;
-        case "remove":
-          await handleTriggerRemove(Becca, interaction, t, config);
-          break;
-        case "view":
-          await handleTriggerView(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subcommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

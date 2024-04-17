@@ -1,52 +1,52 @@
 {
   "missingGuild": [
-    "It seems I cannot locate your guild record. <:BeccaHuh:877278300739887134>",
-    "Are you sure that guild actually exists? <:BeccaNotes:883854700762505287>",
-    "Well that's odd... your guild does not seem to be in my archives. <:BeccaShrug:872577688441880627>"
+    "It seems I cannot locate your guild record. ",
+    "Are you sure that guild actually exists? ",
+    "Well that's odd... your guild does not seem to be in my archives. "
   ],
   "invalidCommand": [
-    "I am not sure how this happened, but that spell does not appear to be valid. <:BeccaSweat:872577688647381032>",
-    "Well that's awkward - I don't actually know that spell. <:BeccaThink:872577687410081853>",
-    "Hmm... I have not heard of that spell before. <:BeccaNotes:883854700762505287>"
+    "I am not sure how this happened, but that spell does not appear to be valid. ",
+    "Well that's awkward - I don't actually know that spell. ",
+    "Hmm... I have not heard of that spell before. "
   ],
   "noPermission": [
-    "You do not have the correct skills to use this spell. <:BeccaFacepalm:872577686541840514>",
-    "I am afraid I cannot allow you to do that. <:BeccaBan:897545793886634085>",
-    "Maybe one day you can use this spell. Today is not the day. <:BeccaWink:867102883635789844>"
+    "You do not have the correct skills to use this spell. ",
+    "I am afraid I cannot allow you to do that. ",
+    "Maybe one day you can use this spell. Today is not the day. "
   ],
   "ownerOnly": [
-    "Only nhcarrigan can ask me to do this. <:BeccaSmug:872577688022421566>",
-    "There is only one person special enough to use this spell. It's not you. <:BeccaSip:867102882259533874>",
-    "Yeah, I don't think so. This spell isn't meant for you. <:BeccaLaugh:877278301830414396>"
+    "Only nhcarrigan can ask me to do this. ",
+    "There is only one person special enough to use this spell. It's not you. ",
+    "Yeah, I don't think so. This spell isn't meant for you. "
   ],
   "noModBecca": [
-    "Brave of you to try to make me your target. Foolish, but brave. <:BeccaHyper:890349403481722881>",
-    "How dare you try to turn on me? You shall regret this. <:BeccaAngry:877278332843085824>",
-    "Excuse me? Who do you think you are? <:BeccaBan:897545793886634085>"
+    "Brave of you to try to make me your target. Foolish, but brave. ",
+    "How dare you try to turn on me? You shall regret this. ",
+    "Excuse me? Who do you think you are? "
   ],
   "noModSelf": [
-    "Are... are you asking me to smite you? That's weird. <:BeccaThink:872577687410081853>",
-    "I try not to judge people's requests, but yours is especially strange. <:BeccaYikes:877278299066347632>",
-    "I punish you on my terms, not yours. And I don't feel like doing so today. <:BeccaYawn:867102883823353937>"
+    "Are... are you asking me to smite you? That's weird. ",
+    "I try not to judge people's requests, but yours is especially strange. ",
+    "I punish you on my terms, not yours. And I don't feel like doing so today. "
   ],
   "noSelfXP": [
-    "I try not to judge people's requests, but giving XP to yourself seems like a loser move. <:BeccaPeek:867102878588862514>",
-    "I can not let you do that. <:BeccaSmug:872577688022421566>",
-    "Are you so desperate to move on levels leaderboard, that you try to modify your own XP? <:BeccaYikes:877278299066347632>"
+    "I try not to judge people's requests, but giving XP to yourself seems like a loser move. ",
+    "I can not let you do that. ",
+    "Are you so desperate to move on levels leaderboard, that you try to modify your own XP? "
   ],
   "noBotXP": [
-    "Bots don't level up. They're already too powerful for you to handle. <:BeccaWink:867102883635789844>",
-    "Thanks, but we bots don't need any XP coming from you... <:BeccaYikes:877278299066347632>",
-    "Bots have no need for fake digital points or levels that represent how active someone is, we're listening in 24/7. <:BeccaShrug:872577688441880627>"
+    "Bots don't level up. They're already too powerful for you to handle. ",
+    "Thanks, but we bots don't need any XP coming from you... ",
+    "Bots have no need for fake digital points or levels that represent how active someone is, we're listening in 24/7. "
   ],
   "noEmoteSelf": [
-    "Are you so desperate for attention that you feel the need to do that to yourself? <:BeccaYikes:877278299066347632>",
-    "Wow, you have got quite the ego - maybe give someone else some love instead? <:BeccaShrug:872577688441880627>",
-    "Okay then. I'm just going to ignore that. <:BeccaYawn:867102883823353937>"
+    "Are you so desperate for attention that you feel the need to do that to yourself? ",
+    "Wow, you have got quite the ego - maybe give someone else some love instead? ",
+    "Okay then. I'm just going to ignore that. "
   ],
   "noEmoteBecca": [
-    "It's cute that you think you are important enough to warrant my attention. <:BeccaLaugh:877278301830414396>",
-    "You do realise that is not going to make me notice you, right? <:BeccaThink:872577687410081853>",
-    "While that is very kind of you, I still find myself not caring. <:BeccaSmug:872577688022421566>"
+    "It's cute that you think you are important enough to warrant my attention. ",
+    "You do realise that is not going to make me notice you, right? ",
+    "While that is very kind of you, I still find myself not caring. "
   ]
 }

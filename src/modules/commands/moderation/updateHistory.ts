@@ -1,7 +1,7 @@
-import HistoryModel from "../../../database/models/HistoryModel";
 import { BeccaLyria } from "../../../interfaces/BeccaLyria";
 import { ModerationActions } from "../../../interfaces/commands/moderation/ModerationActions";
 import { beccaErrorHandler } from "../../../utils/beccaErrorHandler";
+import { modActionToPlural } from "../../../utils/typeConversions";
 
 /**
  * Saves a count of the user's moderation actions.
@@ -18,42 +18,31 @@ export const updateHistory = async (
   guildId: string
 ) => {
   try {
-    const userRecord =
-      (await HistoryModel.findOne({
-        serverId: guildId,
-        userId: userId,
-      })) ||
-      (await HistoryModel.create({
-        serverId: guildId,
-        userId: userId,
-        bans: 0,
-        kicks: 0,
-        mutes: 0,
-        unmutes: 0,
-        warns: 0,
-      }));
-
-    switch (action) {
-      case "kick":
-        userRecord.kicks++;
-        break;
-      case "ban":
-        userRecord.bans++;
-        break;
-      case "mute":
-        userRecord.mutes++;
-        break;
-      case "unmute":
-        userRecord.unmutes++;
-        break;
-      case "warn":
-        userRecord.warns++;
-        break;
-      default:
-        break;
-    }
-
-    await userRecord.save();
+    const createData = {
+      serverId: guildId,
+      userId,
+      bans: 0,
+      kicks: 0,
+      mutes: 0,
+      unbans: 0,
+      unmutes: 0,
+      warns: 0,
+    };
+    createData[modActionToPlural(action)] = 1;
+    await Becca.db.histories.upsert({
+      where: {
+        serverId_userId: {
+          serverId: guildId,
+          userId,
+        },
+      },
+      update: {
+        [modActionToPlural(action)]: {
+          increment: 1,
+        },
+      },
+      create: createData,
+    });
   } catch (err) {
     await beccaErrorHandler(Becca, "update moderation history", err, guildId);
   }

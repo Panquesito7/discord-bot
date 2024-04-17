@@ -1,9 +1,10 @@
-import { REST } from "@discordjs/rest";
 import {
+  Message,
+  REST,
   RESTPostAPIApplicationCommandsJSONBody,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
   Routes,
-} from "discord-api-types/v9";
+} from "discord.js";
 
 import { BeccaLyria } from "../interfaces/BeccaLyria";
 
@@ -19,11 +20,15 @@ import { beccaLogHandler } from "./beccaLogHandler";
  * home guild only.
  *
  * @param {BeccaLyria} Becca Becca's Discord instance.
+ * @param {Message} message The message that triggered the command.
  * @returns {boolean} True if the commands were registered, false on error.
  */
-export const registerCommands = async (Becca: BeccaLyria): Promise<boolean> => {
+export const registerCommands = async (
+  Becca: BeccaLyria,
+  message?: Message
+): Promise<boolean> => {
   try {
-    const rest = new REST({ version: "9" }).setToken(Becca.configs.token);
+    const rest = new REST({ version: "10" }).setToken(Becca.configs.token);
 
     const commandData: (
       | RESTPostAPIApplicationCommandsJSONBody
@@ -43,6 +48,11 @@ export const registerCommands = async (Becca: BeccaLyria): Promise<boolean> => {
       await rest.put(Routes.applicationCommands(Becca.configs.id), {
         body: commandData,
       });
+      if (message) {
+        await message.channel.send({
+          content: "Commands registered globally!",
+        });
+      }
     } else {
       beccaLogHandler.log("debug", "registering to home guild only");
       await rest.put(
@@ -52,6 +62,11 @@ export const registerCommands = async (Becca: BeccaLyria): Promise<boolean> => {
         ),
         { body: commandData }
       );
+      if (message) {
+        await message.channel.send({
+          content: `Commands registered to guild ${Becca.configs.homeGuild}!`,
+        });
+      }
     }
     return true;
   } catch (err) {

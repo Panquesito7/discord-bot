@@ -1,98 +1,143 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+  SlashCommandSubcommandGroupBuilder,
+  ChannelType,
+  PermissionFlagsBits,
+} from "discord.js";
 
-import { logChoices } from "../config/commands/settingsChoices";
+import { defaultServer } from "../config/database/defaultServer";
 import { Command } from "../interfaces/commands/Command";
+import { Settings } from "../interfaces/settings/Settings";
+import { SettingsHandler } from "../interfaces/settings/SettingsHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleLogReset } from "../modules/commands/subcommands/log/handleLogReset";
-import { handleLogSet } from "../modules/commands/subcommands/log/handleLogSet";
-import { handleLogView } from "../modules/commands/subcommands/log/handleLogView";
+import { attachSubcommandsToGroup } from "../utils/attachSubcommands";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+import { tFunctionArrayWrapper } from "../utils/tFunctionWrapper";
+
+import { handleReset } from "./subcommands/config/handleReset";
+import { handleSet } from "./subcommands/config/handleSet";
+import { handleView } from "./subcommands/config/handleView";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: SettingsHandler } = {
+  set: handleSet,
+  reset: handleReset,
+  view: handleView,
+};
+
+const subcommands = [
+  new SlashCommandSubcommandBuilder()
+    .setName("message_events")
+    .setDescription("Set where message edits/deletes should be logged.")
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("The channel to log.")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.PublicThread)
+    ),
+  new SlashCommandSubcommandBuilder()
+    .setName("voice_events")
+    .setDescription("Set where voice chat leaves/joins/mutes should be logged.")
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("The channel to log.")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.PublicThread)
+    ),
+  new SlashCommandSubcommandBuilder()
+    .setName("thread_events")
+    .setDescription("Set where thread create/deletes should be logged.")
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("The channel to log.")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.PublicThread)
+    ),
+  new SlashCommandSubcommandBuilder()
+    .setName("member_events")
+    .setDescription("Set where member updates should be logged.")
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("The channel to log.")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.PublicThread)
+    ),
+  new SlashCommandSubcommandBuilder()
+    .setName("moderation_events")
+    .setDescription("Set where moderation actions should be logged.")
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("The channel to log.")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildText, ChannelType.PublicThread)
+    ),
+];
 
 export const log: Command = {
   data: new SlashCommandBuilder()
     .setName("log")
     .setDescription("Manages the logging config.")
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName("set")
-        .setDescription("Set a channel for a specific logging type")
-        .addStringOption((option) =>
-          option
-            .setName("event")
-            .setDescription("The type of events to log")
-            .addChoices(logChoices)
-            .setRequired(true)
-        )
-        .addChannelOption((option) =>
-          option
-            .setName("channel")
-            .setDescription("The channel to log the events in.")
-            .setRequired(true)
-        )
+    .setDMPermission(false)
+    .addSubcommandGroup(
+      attachSubcommandsToGroup(
+        new SlashCommandSubcommandGroupBuilder()
+          .setName("set")
+          .setDescription("Set a specific log setting."),
+        subcommands
+      )
     )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName("reset")
-        .setDescription("Clear the logging option for a specific event.")
-        .addStringOption((option) =>
-          option
-            .setName("event")
-            .setDescription("The type of events to log")
-            .addChoices(logChoices)
-            .setRequired(true)
-        )
+    .addSubcommandGroup(
+      attachSubcommandsToGroup(
+        new SlashCommandSubcommandGroupBuilder()
+          .setName("reset")
+          .setDescription("Clear the value of a specific setting."),
+        subcommands,
+        true
+      )
     )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName("view")
-        .setDescription("View your logging settings.")
+    .addSubcommandGroup(
+      attachSubcommandsToGroup(
+        new SlashCommandSubcommandGroupBuilder()
+          .setName("view")
+          .setDescription("View your logging settings."),
+        subcommands,
+        true
+      )
     ),
   run: async (Becca, interaction, t, config) => {
     try {
       await interaction.deferReply();
-      const { guild, member } = interaction;
-
-      if (!guild || !member) {
-        await interaction.editReply({
-          content: getRandomValue(t("responses:missingGuild")),
-        });
-        return;
-      }
+      const { member } = interaction;
 
       if (
-        (typeof member.permissions === "string" ||
-          !member.permissions.has("MANAGE_GUILD")) &&
+        !member.permissions.has(PermissionFlagsBits.ManageGuild) &&
         member.user.id !== Becca.configs.ownerId
       ) {
         await interaction.editReply({
-          content: getRandomValue(t("responses:noPermission")),
+          content: tFunctionArrayWrapper(t, "responses:noPermission"),
         });
         return;
       }
 
-      const action = interaction.options.getSubcommand();
-      switch (action) {
-        case "set":
-          await handleLogSet(Becca, interaction, t, config);
-          break;
-        case "reset":
-          await handleLogReset(Becca, interaction, t, config);
-          break;
-        case "view":
-          await handleLogView(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
+      const action = interaction.options.getSubcommandGroup(true);
+      const setting = interaction.options.getSubcommand(true) as Settings;
+      const subcommandData = subcommands.find((el) => el.name === setting);
+      if (!subcommandData) {
+        await handleInvalidSubcommand(Becca, interaction, t, config);
+        return;
       }
-      Becca.pm2.metrics.commands.mark();
+      const value = `${
+        interaction.options.get(subcommandData.options[0].name)?.value ??
+        defaultServer[setting]
+      }`;
+      const handler = handlers[action];
+      await handler(Becca, interaction, t, config, setting, value);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

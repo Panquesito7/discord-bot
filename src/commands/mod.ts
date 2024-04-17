@@ -1,24 +1,34 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleBan } from "../modules/commands/subcommands/moderation/handleBan";
-import { handleHistory } from "../modules/commands/subcommands/moderation/handleHistory";
-import { handleKick } from "../modules/commands/subcommands/moderation/handleKick";
-import { handleMute } from "../modules/commands/subcommands/moderation/handleMute";
-import { handleUnmute } from "../modules/commands/subcommands/moderation/handleUnmute";
-import { handleWarn } from "../modules/commands/subcommands/moderation/handleWarn";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+import { handleBan } from "./subcommands/moderation/handleBan";
+import { handleHistory } from "./subcommands/moderation/handleHistory";
+import { handleKick } from "./subcommands/moderation/handleKick";
+import { handleMute } from "./subcommands/moderation/handleMute";
+import { handleUnban } from "./subcommands/moderation/handleUnban";
+import { handleUnmute } from "./subcommands/moderation/handleUnmute";
+import { handleWarn } from "./subcommands/moderation/handleWarn";
+
+const handlers: { [key: string]: CommandHandler } = {
+  warn: handleWarn,
+  mute: handleMute,
+  unmute: handleUnmute,
+  kick: handleKick,
+  ban: handleBan,
+  history: handleHistory,
+  unban: handleUnban,
+};
 
 export const mod: Command = {
   data: new SlashCommandBuilder()
     .setName("mod")
     .setDescription("Moderation actions")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("warn")
@@ -57,12 +67,12 @@ export const mod: Command = {
             .setName("unit")
             .setDescription("The unit of time for the duration.")
             .setRequired(true)
-            .addChoices([
-              ["Minutes", "minutes"],
-              ["Hours", "hours"],
-              ["Days", "days"],
-              ["Weeks", "weeks"],
-            ])
+            .addChoices(
+              { name: "Minutes", value: "minutes" },
+              { name: "Hours", value: "hours" },
+              { name: "Days", value: "days" },
+              { name: "Weeks", value: "weeks" }
+            )
         )
         .addStringOption((option) =>
           option
@@ -112,7 +122,7 @@ export const mod: Command = {
         .addUserOption((option) =>
           option
             .setName("target")
-            .setDescription("The user to kick.")
+            .setDescription("The user to ban.")
             .setRequired(true)
         )
         .addNumberOption((option) =>
@@ -124,6 +134,23 @@ export const mod: Command = {
             .setRequired(true)
             .setMinValue(0)
             .setMaxValue(7)
+        )
+        .addStringOption((option) =>
+          option
+            .setName("reason")
+            .setDescription("The reason for banning the user.")
+            .setRequired(true)
+        )
+    )
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
+        .setName("unban")
+        .setDescription("Unbans a user from the server.")
+        .addUserOption((option) =>
+          option
+            .setName("target")
+            .setDescription("The user to unban.")
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
@@ -147,33 +174,8 @@ export const mod: Command = {
     try {
       await interaction.deferReply();
       const subcommand = interaction.options.getSubcommand();
-
-      switch (subcommand) {
-        case "warn":
-          await handleWarn(Becca, interaction, t, config);
-          break;
-        case "mute":
-          await handleMute(Becca, interaction, t, config);
-          break;
-        case "unmute":
-          await handleUnmute(Becca, interaction, t, config);
-          break;
-        case "kick":
-          await handleKick(Becca, interaction, t, config);
-          break;
-        case "ban":
-          await handleBan(Becca, interaction, t, config);
-          break;
-        case "history":
-          await handleHistory(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subcommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

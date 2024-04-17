@@ -1,33 +1,58 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+  ChannelType,
+} from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleAbout } from "../modules/commands/subcommands/becca/handleAbout";
-import { handleAdventure } from "../modules/commands/subcommands/becca/handleAdventure";
-import { handleArt } from "../modules/commands/subcommands/becca/handleArt";
-import { handleContact } from "../modules/commands/subcommands/becca/handleContact";
-import { handleDonate } from "../modules/commands/subcommands/becca/handleDonate";
-import { handleEmote } from "../modules/commands/subcommands/becca/handleEmote";
-import { handleHelp } from "../modules/commands/subcommands/becca/handleHelp";
-import { handleInvite } from "../modules/commands/subcommands/becca/handleInvite";
-import { handlePing } from "../modules/commands/subcommands/becca/handlePing";
-import { handlePrivacy } from "../modules/commands/subcommands/becca/handlePrivacy";
-import { handleProfile } from "../modules/commands/subcommands/becca/handleProfile";
-import { handleStats } from "../modules/commands/subcommands/becca/handleStats";
-import { handleTranslators } from "../modules/commands/subcommands/becca/handleTranslators";
-import { handleUpdates } from "../modules/commands/subcommands/becca/handleUpdates";
-import { handleUptime } from "../modules/commands/subcommands/becca/handleUptime";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleAbout } from "./subcommands/becca/handleAbout";
+import { handleAdventure } from "./subcommands/becca/handleAdventure";
+import { handleAnnouncements } from "./subcommands/becca/handleAnnouncements";
+import { handleArt } from "./subcommands/becca/handleArt";
+import { handleContact } from "./subcommands/becca/handleContact";
+import { handleDonate } from "./subcommands/becca/handleDonate";
+import { handleEmote } from "./subcommands/becca/handleEmote";
+import { handleFeedback } from "./subcommands/becca/handleFeedback";
+import { handleHelp } from "./subcommands/becca/handleHelp";
+import { handleInvite } from "./subcommands/becca/handleInvite";
+import { handlePing } from "./subcommands/becca/handlePing";
+import { handlePrivacy } from "./subcommands/becca/handlePrivacy";
+import { handleProfile } from "./subcommands/becca/handleProfile";
+import { handleStats } from "./subcommands/becca/handleStats";
+import { handleTranslators } from "./subcommands/becca/handleTranslators";
+import { handleUpdates } from "./subcommands/becca/handleUpdates";
+import { handleUptime } from "./subcommands/becca/handleUptime";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: CommandHandler } = {
+  ping: handlePing,
+  help: handleHelp,
+  about: handleAbout,
+  invite: handleInvite,
+  art: handleArt,
+  donate: handleDonate,
+  uptime: handleUptime,
+  profile: handleProfile,
+  updates: handleUpdates,
+  stats: handleStats,
+  emote: handleEmote,
+  adventure: handleAdventure,
+  privacy: handlePrivacy,
+  contact: handleContact,
+  translators: handleTranslators,
+  feedback: handleFeedback,
+  announcements: handleAnnouncements,
+};
 
 export const becca: Command = {
   data: new SlashCommandBuilder()
     .setName("becca")
     .setDescription("Returns the uptime of the bot.")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("ping")
@@ -85,11 +110,10 @@ export const becca: Command = {
           option
             .setName("view")
             .setDescription("Which stat do you want to view?")
-            .addChoices([
-              ["Bot Votes", "bvotes"],
-              ["Command Leaderboard", "commands"],
-              ["Server Votes", "svotes"],
-            ])
+            .addChoices(
+              { name: "Bot Votes", value: "bvotes" },
+              { name: "Server Votes", value: "svotes" }
+            )
             .setRequired(true)
         )
     )
@@ -119,65 +143,35 @@ export const becca: Command = {
         .setDescription(
           "Lists the wonderful people who have helped translate Becca."
         )
+    )
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
+        .setName("feedback")
+        .setDescription(
+          "Provide feedback on Becca - request features, report bugs, or share your thoughts!"
+        )
+    )
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
+        .setName("announcements")
+        .setDescription(
+          "Subscribe to Becca's announcements directly in your server."
+        )
+        .addChannelOption((option) =>
+          option
+            .setName("channel")
+            .setDescription("The channel you want announcements posted in.")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true)
+        )
     ),
   run: async (Becca, interaction, t, config) => {
     try {
+      const subCommand = interaction.options.getSubcommand();
       await interaction.deferReply();
 
-      const subCommand = interaction.options.getSubcommand();
-      switch (subCommand) {
-        case "ping":
-          await handlePing(Becca, interaction, t, config);
-          break;
-        case "help":
-          await handleHelp(Becca, interaction, t, config);
-          break;
-        case "about":
-          await handleAbout(Becca, interaction, t, config);
-          break;
-        case "invite":
-          await handleInvite(Becca, interaction, t, config);
-          break;
-        case "art":
-          await handleArt(Becca, interaction, t, config);
-          break;
-        case "donate":
-          await handleDonate(Becca, interaction, t, config);
-          break;
-        case "uptime":
-          await handleUptime(Becca, interaction, t, config);
-          break;
-        case "profile":
-          await handleProfile(Becca, interaction, t, config);
-          break;
-        case "updates":
-          await handleUpdates(Becca, interaction, t, config);
-          break;
-        case "stats":
-          await handleStats(Becca, interaction, t, config);
-          break;
-        case "emote":
-          await handleEmote(Becca, interaction, t, config);
-          break;
-        case "adventure":
-          await handleAdventure(Becca, interaction, t, config);
-          break;
-        case "privacy":
-          await handlePrivacy(Becca, interaction, t, config);
-          break;
-        case "contact":
-          await handleContact(Becca, interaction, t, config);
-          break;
-        case "translators":
-          await handleTranslators(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subCommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

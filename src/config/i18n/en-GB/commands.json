@@ -1,5 +1,9 @@
 {
   "automod": {
+    "antiphish": {
+      "failure": "I am having trouble updating your settings. Please try again later.",
+      "success": "Anti-phishing Setting Updated!"
+    },
     "reset": {
       "success": "I have reset your {{setting}} setting.",
       "failure": "I am having trouble updating your settings. Please try again later."
@@ -20,7 +24,8 @@
         "channels": "Automodded Channels",
         "nonChannels": "Not Automodded Channels",
         "exempt": "Automod Exempt Roles",
-        "allowed": "Allowed Links"
+        "allowed": "Allowed Links",
+        "antiphish": "Anti-Phish Action"
       }
     }
   },
@@ -34,7 +39,11 @@
       "members": "Members",
       "commands": "Available Spells",
       "colour": "Favourite Colour",
-      "purple": "Purple",
+      "language": "Code Language",
+      "typescript": "TypeScript",
+      "files": "File Count",
+      "lines": "Lines of Code",
+      "coverage": "Test Coverage",
       "buttons": {
         "join": "Join our support server",
         "invite": "Add Becca to your server!",
@@ -47,6 +56,11 @@
         "more": "View more adventures!"
       }
     },
+    "announcements": {
+      "noAnnouncements": "It appears my announcement channel is misconfigured. Please let us know at https://chat.nhcarrigan.com",
+      "noPerms": "I am missing the `Manage Webhooks` powers to do that.",
+      "success": "You will now receive announcements in {{- channel}}!"
+    },
     "art": {
       "description": "This portrait of me was done by [{{artist}}]({{url}})",
       "buttons": {
@@ -57,7 +71,7 @@
       "content": "Here are the options for getting in touch with us:",
       "buttons": {
         "support": "Join our support server",
-        "twitter": "Follow us on Twitter",
+        "mastodon": "Follow us on Mastodon",
         "github": "Create an issue on GitHub"
       }
     },
@@ -76,6 +90,10 @@
       "buttons": {
         "more": "View more emotes!"
       }
+    },
+    "feedback": {
+      "title": "Give us feedback!",
+      "description": "Have a suggestion for a way I can improve? Want to share your experience with me? You can do so in our Discord~! https://chat.nhcarrigan.com"
     },
     "help": {
       "title": "How to Interact with Becca",
@@ -98,7 +116,7 @@
       },
       "privacy": {
         "title": "Privacy Policy",
-        "description": "As part of my services, I collect and use some specific Discord related information. This information includes, but may not be limited to, your user name, nickname, this server's name, and your Discord ID. [View my full policy](https://docs.beccalyria.com/#/privacy-policy)"
+        "description": "As part of my services, I collect and use some specific Discord related information. This information includes, but may not be limited to, your user name, nickname, this server's name, and your Discord ID. [View my full policy](https://becca.nhcarrigan.com/#/privacy-policy?utm_source=discord&utm_medium=privacy-command)"
       },
       "buttons": {
         "support": "Join our support server",
@@ -125,11 +143,11 @@
     },
     "privacy": {
       "title": "I'll keep your secrets safe!",
-      "description": "To maintain my functionality, I need to collect quite a bit of data. Mostly, this data is user/server IDs, names, and avatars.\n\nI will never store your message content in my database, but it may be logged in this server if the admins have enabled it.\n\nIf you want a full breakdown of everything I collect, [view my privacy policy](https://docs.beccalyria.com/#/privacy-policy)."
+      "description": "To maintain my functionality, I need to collect quite a bit of data. Mostly, this data is user/server IDs, names, and avatars.\n\nI will never store your message content in my database, but it may be logged in this server if the admins have enabled it.\n\nIf you want a full breakdown of everything I collect, [view my privacy policy](https://becca.nhcarrigan.com/#/privacy-policy?utm_source=discord&utm_medium=privacy-command)."
     },
     "profile": {
       "title": "Becca Lyria",
-      "description": "If you want to read about my adventures, check my [profile site](https://www.beccalyria.com). I would rather not have to recount them all here.",
+      "description": "If you want to read about my adventures, check my [profile site](https://www.beccalyria.com?utm_source=discord&utm_medium=profile-command). I would rather not have to recount them all here.",
       "buttons": {
         "view": "View Becca's profile"
       }
@@ -165,13 +183,11 @@
     },
     "updates": {
       "title": "Update Information",
-      "description": "Becca's updates are deployed every Sunday around 8AM Pacific Time. This is important information to know, as these deployments clear the cache. This results in any outstanding cache-reliant features, such as polls, trivia games, or scheduled posts, to be lost. Please plan your interactions around this schedule.",
-      "latest": "Latest Updates",
       "version": "Current Version",
       "next": "Next Scheduled Update",
       "changelog": {
         "title": "Change Log",
-        "description": "View Becca's entire change log [in her documentation](https://docs.beccalyria.com/#/changelog)."
+        "description": "View Becca's entire change log [in her documentation](https://becca.nhcarrigan.com/#/changelog?utm_source=discord&utm_medium=changelog-command)."
       },
       "commit": "Commit Hash",
       "buttons": {
@@ -213,7 +229,7 @@
       }
     },
     "level": {
-      "none": "{{user}} has not earned any levels yet...",
+      "none": "{{- user}} has not earned any levels yet...",
       "title": "{{user}}'s Ranking",
       "description": "Here is the record I have in {{name}}",
       "points": "Experience Points",
@@ -230,13 +246,7 @@
       "results": "Results!"
     },
     "role": {
-      "none": "Your guild does not have any self assignable titles.",
-      "title": "Here are the titles I can grant you!",
-      "page": "Page {{page}} of {{last}}",
-      "invalid": "I cannot cast that enchantment. You will need to speak to someone higher up.",
-      "error": "Something is wrong with your role data...",
-      "removed": "You are no longer enchanted with {{name}}.",
-      "added": "I have cast the {{name}} charm on you."
+      "deprecated": "This command has been deprecated in favour of reaction roles. If your server does not have reaction roles set up, ask an admin to configure them!"
     },
     "schedule": {
       "permission": "You are not allowed to send messages in that channel.",
@@ -245,7 +255,7 @@
       "post": "{{- id}}, here is your scheduled post:\n{{- message}}",
       "embed": {
         "title": "Message Scheduled",
-        "description": "I will send your message with the following settings. Please note that my memory is not perfect, and if I need to be restarted your scheduled post will be lost.",
+        "description": "I will send your message with the following settings. Please note that I am not perfect, and if I am offline when your event is scheduled to run, it will be discarded.",
         "time": "Time",
         "minutes": "{{time}} minutes",
         "channel": "Target Channel",
@@ -302,6 +312,9 @@
       "title": "Someone had an idea:",
       "success": "Alright, I have posted that. Good luck!"
     },
+    "ticket": {
+      "disabled": "The guild has not enabled the support ticket system yet. Perhaps there is somewhere else you can ask for assistance?"
+    },
     "topic": {
       "title": "Start a Conversation!",
       "footer": "Topics pulled from conversationstartersworld.com"
@@ -326,7 +339,10 @@
     "set": {
       "invalid": "{{value}} is not a valid option for {{setting}}",
       "failed": "I am having trouble updating your settings. Please try again later.",
-      "title": "{{setting}} Updated"
+      "title": "{{setting}} Updated",
+      "noPerms": "I am missing the {{permission}} powers to do that.",
+      "noChannelPerms": "I am missing the {{permission}} powers in {{- channel}} to do that.",
+      "roleNotManagable": "I am missing the powers to alter the {{role}} role"
     },
     "view": {
       "none": "I am unable to locate your settings",
@@ -348,94 +364,16 @@
       "blocked": "Blocked User Count",
       "selfrole": "Self Assignable Titles",
       "emote": "Emote Only Channels",
-      "ban": "Ban Appeal Link"
+      "ban": "Ban Appeal Link",
+      "initialXp": "Initial Experience",
+      "levelStyle": "Level Messages Style",
+      "levelMessage": "Level Message",
+      "roleMessage": "Role Message"
     },
     "settingsArray": {
       "title": "Config data for {{setting}}",
       "none": "No data found.",
       "page": "Page {{page}} of {{pages}}"
-    }
-  },
-  "currency": {
-    "about": {
-      "description": "Our new currency system allows you to collect BeccaCoin, a virtual currency, and exchange these coins for rewards. These coins can be collected on a daily and weekly basis. Note that these rewards require you to [join our support server](https://chat.nhcarrigan.com).",
-      "modify": {
-        "title": "Right to Modify",
-        "description": "We reserve the right to add, remove, or modify rewards at any time, without prior notice to the users."
-      },
-      "cash": {
-        "title": "No Cash Value",
-        "description": "BeccaCoin is a virtual currency with *no cash value*, except for implied value available through the reward exchange."
-      },
-      "bots": {
-        "title": "No Bots",
-        "description": "Using automation, scripting, self-bots, or other methods to take advantage of the currency system are violations of Discord Terms of Service and we will deny any rewards obtained this way."
-      },
-      "refuse": {
-        "title": "Right to Refuse",
-        "description": "The development team reserves the right to refuse any claimed reward without compensation to the user."
-      }
-    },
-    "claim": {
-      "price": "This reward costs {{price}} BeccaCoint. You only have {{total}}.",
-      "invalid": "This somehow appears to be an invalid reward. Please check with the developer team.",
-      "details": "Reward Details",
-      "monarch": "You will take the monarch role from whomever has it in our support server, and you will keep the role until someone else takes it from you.",
-      "emote": "You will be able to work with nhcarrigan to determine the next pose for a Becca emote. The emote will be available in the support server. nhcarrigan will retain all rights to the art and the character, but we will make an announcement in the support server thanking you for the emote idea.",
-      "feature": "You will be able to work with nhcarrigan and the development team to suggest a new feature for Becca. We reserve the right to refuse features that are not in line with Becca's primary purpose, but will work with you until you we reach a feature proposal everyone is happy with.",
-      "wealthy": "You will be given the Wealthy role in our support server. You will keep this role.",
-      "button": "Join our server to redeem your rewards!"
-    },
-    "daily": {
-      "cooldown": "You have already claimed your daily. Come back in: {{time}}",
-      "title": "Daily Reward!",
-      "description": "You've earned {{earned}} BeccaCoin! You now have {{total}} BeccaCoin!"
-    },
-    "guess": {
-      "insufficient": "You cannot wager more coin than you have!",
-      "won": "You won!",
-      "lost": "You lost...",
-      "total": "Your BeccaCoin: {{total}}",
-      "guess": "Your Guess",
-      "becca": "Becca's Number"
-    },
-    "slots": {
-      "nowager": "You must wager at least one BeccaCoin.",
-      "insufficient": "You cannot wager more coin than you have!",
-      "cooldown": "You cannot play slots that often! Come back in: {{time}}",
-      "won": "You won!",
-      "lost": "You lost...",
-      "total": "Your BeccaCoin: {{total}}",
-      "footer": "Emotes by Starfazers: https://starfazers.art"
-    },
-    "twentyone": {
-      "nowager": "You must wager at least one BeccaCoin.",
-      "insufficient": "You cannot wager more coin than you have!",
-      "cooldown": "You cannot play 21 that often! Come back in: {{time}}",
-      "title": "Twenty One!",
-      "description": "Get your score higher than Becca without going over 21! Press `hit` to increase your score, and `stand` to stop playing and let Becca finish her turns.",
-      "player": "Your Score",
-      "becca": "Becca's Score",
-      "hit": "Hit",
-      "stand": "Stand",
-      "won": "You win!",
-      "lost": "You lose...",
-      "total": "Your BeccaCoin: {{total}}",
-      "expired": "This game has expired after ten minutes."
-    },
-    "view": {
-      "total": "You currently have {{total}} BeccaCoin!",
-      "daily": "Next Daily Claim",
-      "weekly": "Next Weekly Claim"
-    },
-    "weekly": {
-      "no": {
-        "title": "Uh oh!",
-        "description": "Weekly rewards are only available to members of our support server! You can [join with this link](https://chat.nhcarrigan.com) and come hang out with us!"
-      },
-      "cooldown": "You have already claimed your weekly! Come back in {{time}}",
-      "title": "Weekly Reward!",
-      "description": "You've earned {{earned}} BeccaCoin! You now have {{total}} BeccaCoin!"
     }
   },
   "emote": {
@@ -500,6 +438,10 @@
     "joke": {
       "no": "I am not in the mood for humour right now.",
       "title": "Perhaps this will entertain you..."
+    },
+    "quote": {
+      "no": "I am not in the mood for quoting right now.",
+      "title": "Perhaps this will enlighten you..."
     },
     "mtg": {
       "no": "That card does not seem to exist...",
@@ -597,7 +539,7 @@
       "buttons": {
         "discord": "Join our server!",
         "github": "Contribute on GitHub!",
-        "twitter": "Follow us on Twitter!"
+        "mastodon": "Follow us on Mastodon!"
       }
     },
     "permissions": {
@@ -670,7 +612,8 @@
       "kick": "Kicks",
       "warn": "Warnings",
       "mute": "Mutes",
-      "unmute": "Unmutes"
+      "unmute": "Unmutes",
+      "unban": "Unbans"
     },
     "kick": {
       "invalid": "I am afraid they are too important for me to remove.",
@@ -688,7 +631,14 @@
       "reason": "Reason",
       "duration": "Duration",
       "notified": "User Notified?",
-      "success": "That user has been cursed with silence."
+      "success": "That user has been cursed with silence.",
+      "left": "I cannot find that member. Is it possible they left the guild?"
+    },
+    "unban": {
+      "title": "A user has been unbanned!",
+      "description": "The ban was lifted by {{user}}",
+      "reason": "Reason",
+      "success": "That user may rejoin our guild."
     },
     "unmute": {
       "title": "A user is no longer silenced!",
@@ -705,56 +655,72 @@
       "success": "I have informed them of their shortcomings."
     }
   },
-  "nhcarrigan": {
-    "purge": {
-      "no": "no data found!",
-      "levels": "I have cleared the level data for {{name}}.",
-      "activity": "I have cleared the activity data for {{name}}.",
-      "stars": "I have cleared the star data for {{name}}.",
-      "currency": "I have cleared the currency data for {{name}}.",
-      "votes": "I have cleared the vote data for {{name}}.",
-      "commands": "I have cleared the command data for {{name}}.",
-      "emotes": "I have cleared the emote data for {{name}}.",
-      "invalid": "{{data}} is not a valid option."
+  "optOut": {
+    "invalidType": "{{type}} is not a valid type.",
+    "noRecord": "There was an error fetching your database record. Please try again.",
+    "optIn": "You have been opted back in to the {{type}} system.",
+    "confirm": "Please confirm you wish to opt out of the {{type}} system. This will prevent you from using any features related to that system, and all of your relevant data for that system will be automatically deleted.",
+    "cancelled": "Your request has been cancelled. Feel free to try again later. **Note that you are still opted in.**",
+    "success": "You have been opted out and your data have been deleted.",
+    "failure": "You have been opted out, but there was an issue deleting your data. Please contact Naomi.",
+    "timeout": "Your request has timed out. Feel free to try again later. **Note that you are still opted in.**"
+  },
+  "post": {
+    "create": {
+      "nonTextChannel": "I can't send messages in the <#{{channelId}}> channel as it isn't a text channel.",
+      "noPerms": "I don't have permissions to send messages in the <#{{channelId}}> channel.",
+      "success": "Successfully sent the post in <#{{channelId}}> channel!"
     },
-    "register": {
-      "failed": "Failed to prepare spells!",
-      "title": "Spells Prepared",
-      "description": "The following spells have been prepared.",
-      "context": "Context Commands"
+    "edit": {
+      "failure": "I am not able to edit that message at {{- link}}.",
+      "success": "Successfully updated the post at {{- link}}!",
+      "invlid": "Invalid message link entered.",
+      "cant-edit": "I can't edit that message as it wasn't posted by me.",
+      "doesnt-exist": "I can't edit that message, as it doesn't exist or is unaccesible."
     },
-    "unregister": {
-      "missing": "I cannot seem to find that spell.",
-      "invalid": "That spell does not appear to be prepared.",
-      "title": "{{name}} Spell Forgotten"
-    },
-    "viewslash": {
-      "none": "It seems I do not have any spells prepared at this time.",
-      "title": "Available Spells",
-      "description": "These are the spells I currently have prepared.",
-      "opts": "This spell has no options."
+    "delete": {
+      "success": "Succesfully deleted post!",
+      "invalid": "Invalid message link entered.",
+      "cant-delete": "I can't delete that message as it wasn't posted by me.",
+      "doesnt-exist": "I can't delete that message, as it doesn't exist or is unaccesible."
     }
   },
   "reactionrole": {
-    "add": {
-      "message": "That message does not exist.",
-      "invalid": "That emoji does not appear to be valid...",
-      "parse": "I cannot seem to parse that emoji...",
-      "title": "Reaction Role Added",
-      "description": "{{emote}} associated with {{- role}}",
-      "link": "Message Link"
+    "create": {
+      "channel": "That does not appear to be a valid text channel.",
+      "success": "I have created the post for people to request titles!"
     },
-    "list": {
-      "missing": "That message does not exist.",
-      "none": "That message has no reaction roles.",
-      "title": "Reaction Roles",
-      "message": "Message Link"
+    "add": {
+      "badLink": "That does not appear to be a valid Discord message link.",
+      "badChannel": "That channel does not exist, or is not a text channel.",
+      "badMessage": "That message does not appear to exist.",
+      "notMine": "I cannot edit someone else's messages!",
+      "notReactionRole": "That message does not appear to be a reaction role post.",
+      "hasRole": "That role is already available on this post.",
+      "tooManyRoles": "This reaction role post has 20 roles. I can't add any more!",
+      "success": "I have added that role to the post!"
     },
     "remove": {
-      "missing": "That reaction role does not exist.",
-      "title": "Reaction Role Removed",
-      "description": "{{emote}} no longer associated with {{- role}}",
-      "link": "Message Link"
+      "badLink": "That does not appear to be a valid Discord message link.",
+      "badChannel": "That channel does not exist, or is not a text channel.",
+      "badMessage": "That message does not appear to exist.",
+      "notMine": "I cannot edit someone else's messages!",
+      "notReactionRole": "That message does not appear to be a reaction role post.",
+      "noRole": "That role is not available on this post.",
+      "success": "I have removed that role from the post!"
+    }
+  },
+  "support": {
+    "server": {
+      "response": "You can use this link to join our support server. Make sure you select the `I need help with Naomi's projects` role to access the support channels.\n\nhttps://discord.gg/BvbqenYYpP"
+    },
+    "logs": {
+      "notStaff": "You must be a member of our support staff to use this command.",
+      "invalidId": "{{- id}} is not a valid guild ID.",
+      "logs": "Here are the available logs for your guild:"
+    },
+    "ids": {
+      "message": "Here are the relevant IDs. These are safe to share with our support team.\n\nUser ID: {{userId}}\nChannel ID: {{channelId}}\nGuild ID: {{guildId}}"
     }
   },
   "triggers": {
@@ -775,6 +741,25 @@
       "none": "This server does not have any triggers yet.",
       "title": "Available Triggers",
       "footer": "Page {{page}} of {{last}}"
+    }
+  },
+  "userconfig": {
+    "view": {
+      "title": "Your Bot Settings",
+      "description": "These are the individual settings you have configured for Becca.",
+      "levelcard": {
+        "background": "Background Colour",
+        "foreground": "Foreground Colour",
+        "progress": "Progress Bar Colour"
+      }
+    },
+    "levelcard": {
+      "title": "Level Card Settings",
+      "description": "Your level card settings have been updated!",
+      "invalidColour": "Colours must be hex strings, such as #FFFFFF.",
+      "background": "Background Colour",
+      "foreground": "Foreground Colour",
+      "progress": "Progress Bar Colour"
     }
   }
 }

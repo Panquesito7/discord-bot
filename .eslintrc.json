@@ -1,73 +1,84 @@
 {
-  "env": {
-    "es2020": true,
-    "node": true
-  },
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "plugin:jsdoc/recommended",
-    "plugin:import/recommended",
-    "plugin:import/typescript"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 11,
-    "sourceType": "module"
-  },
-  "plugins": ["@typescript-eslint", "jsdoc", "import"],
+  "extends": "@nhcarrigan",
   "rules": {
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "double", { "allowTemplateLiterals": true }],
-    "semi": ["error", "always"],
-    "prefer-const": "error",
-    "eqeqeq": ["error", "always"],
-    "curly": ["error"],
-    "require-atomic-updates": ["error"],
-    "no-var": ["error"],
-    "camelcase": ["error"],
-    "init-declarations": ["error", "always"],
-    "require-await": ["error"],
-    "no-param-reassign": ["error"],
-    "jsdoc/require-jsdoc": [
+    "camelcase": [
       "error",
       {
-        "require": {
-          "ArrowFunctionExpression": true,
-          "ClassDeclaration": true,
-          "ClassExpression": true,
-          "FunctionDeclaration": true,
-          "FunctionExpression": true,
-          "MethodDefinition": true
-        },
-        "publicOnly": true
-      }
-    ],
-    "jsdoc/require-description-complete-sentence": "error",
-    "import/first": "error",
-    "import/exports-last": "error",
-    "import/newline-after-import": "error",
-    "import/order": [
-      "error",
-      {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index",
-          "object",
-          "type",
-          "unknown"
-        ],
-        "newlines-between": "always",
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive": true
-        }
+        "allow": [
+          "serverID_userID",
+          "serverId_userId",
+          "serverId_channelId_messageId",
+          "command_subcommand",
+          "member_targetChannel",
+          "welcome_channel",
+          "depart_channel",
+          "level_channel",
+          "suggestion_channel",
+          "custom_welcome",
+          "automod_channels",
+          "no_automod_channels",
+          "automod_roles",
+          "allowed_links",
+          "link_message",
+          "level_roles",
+          "join_role",
+          "leave_message",
+          "report_channel",
+          "level_ignore",
+          "sass_mode",
+          "message_events",
+          "voice_events",
+          "thread_events",
+          "moderation_events",
+          "member_events",
+          "profanity_message",
+          "emote_channels",
+          "appeal_link",
+          "initial_xp",
+          "level_style",
+          "level_message",
+          "role_message",
+          "new_triggers",
+          "welcome_style",
+          "ticket_category",
+          "ticket_log_channel",
+          "ticket_role",
+          "starboard_emote",
+          "starboard_channel",
+          "starboard_threshold",
+          "level_decay",
+          "server_count"
+        ]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/commands/*.ts", "src/contexts/*.ts"],
+      "rules": {
+        "jsdoc/require-jsdoc": "off"
+      }
+    },
+    {
+      "files": [
+        "src/commands/**/*.ts",
+        "src/listeners/automod/*.ts",
+        "src/modules/listeners/sass/*.ts",
+        "src/modules/events/interactions/buttons/*.ts"
+      ],
+      "rules": {
+        "jsdoc/require-jsdoc": "off",
+        "jsdoc/require-param": "off"
+      }
+    },
+    {
+      "files": [
+        // This is specifically due to the need for parsing PM2s logs.
+        "src/commands/subcommands/support/handleLogs.ts"
+      ],
+      "rules": {
+        "no-control-regex": "off"
+      }
+    }
+  ]
 }

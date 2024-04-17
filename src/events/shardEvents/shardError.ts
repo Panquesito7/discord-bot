@@ -14,5 +14,4 @@ export const shardError = async (
   shard: number
 ): Promise<void> => {
   await beccaErrorHandler(Becca, `shard ${shard}`, error);
-  Becca.pm2.metrics.events.mark();
 };

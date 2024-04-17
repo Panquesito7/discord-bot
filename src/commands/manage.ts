@@ -1,22 +1,28 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleResetLevels } from "../modules/commands/subcommands/manage/handleResetLevels";
-import { handleResetStars } from "../modules/commands/subcommands/manage/handleResetStars";
-import { handleSuggestion } from "../modules/commands/subcommands/manage/handleSuggestion";
-import { handleXpModify } from "../modules/commands/subcommands/manage/handleXpModify";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+import { handleResetLevels } from "./subcommands/manage/handleResetLevels";
+import { handleResetStars } from "./subcommands/manage/handleResetStars";
+import { handleSuggestion } from "./subcommands/manage/handleSuggestion";
+import { handleXpModify } from "./subcommands/manage/handleXpModify";
+
+const handlers: { [key: string]: CommandHandler } = {
+  resetlevels: handleResetLevels,
+  resetstars: handleResetStars,
+  suggestion: handleSuggestion,
+  xpmodify: handleXpModify,
+};
 
 export const manage: Command = {
   data: new SlashCommandBuilder()
     .setName("manage")
     .setDescription("Commands for managing your server.")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("resetlevels")
@@ -35,8 +41,16 @@ export const manage: Command = {
           option
             .setName("action")
             .setDescription("The action to take on the suggestion.")
-            .addChoice("approve", "approve")
-            .addChoice("deny", "deny")
+            .addChoices(
+              {
+                name: "approve",
+                value: "approve",
+              },
+              {
+                name: "deny",
+                value: "deny",
+              }
+            )
             .setRequired(true)
         )
         .addStringOption((option) =>
@@ -50,6 +64,7 @@ export const manage: Command = {
             .setName("reason")
             .setDescription("The reason for approving/denying the suggestion.")
             .setRequired(true)
+            .setMaxLength(1024)
         )
     )
     .addSubcommand(
@@ -60,8 +75,16 @@ export const manage: Command = {
           option
             .setName("action")
             .setDescription("The action you want to take with the xp.")
-            .addChoice("add", "add")
-            .addChoice("remove", "remove")
+            .addChoices(
+              {
+                name: "add",
+                value: "add",
+              },
+              {
+                name: "remove",
+                value: "remove",
+              }
+            )
             .setRequired(true)
         )
         .addUserOption((option) =>
@@ -82,27 +105,8 @@ export const manage: Command = {
       await interaction.deferReply();
 
       const subCommand = interaction.options.getSubcommand();
-
-      switch (subCommand) {
-        case "resetlevels":
-          await handleResetLevels(Becca, interaction, t, config);
-          break;
-        case "resetstars":
-          await handleResetStars(Becca, interaction, t, config);
-          break;
-        case "suggestion":
-          await handleSuggestion(Becca, interaction, t, config);
-          break;
-        case "xpmodify":
-          await handleXpModify(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subCommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

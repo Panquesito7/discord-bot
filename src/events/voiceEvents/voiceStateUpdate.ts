@@ -1,4 +1,4 @@
-import { MessageEmbed, VoiceState } from "discord.js";
+import { EmbedBuilder, VoiceState } from "discord.js";
 import { getFixedT } from "i18next";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
@@ -21,9 +21,9 @@ export const voiceStateUpdate = async (
   try {
     const lang = oldState.guild.preferredLocale;
     const t = getFixedT(lang);
-    const voiceEmbed = new MessageEmbed();
+    const voiceEmbed = new EmbedBuilder();
     voiceEmbed.setTimestamp();
-    voiceEmbed.setFooter(`ID: ${oldState.id}`);
+    voiceEmbed.setFooter({ text: `ID: ${oldState.id}` });
     const userId = `<@!${oldState.id}>`;
     const oldId = `<#${oldState.channelId}>`;
     const newId = `<#${newState.channelId}>`;
@@ -90,10 +90,9 @@ export const voiceStateUpdate = async (
       voiceEmbed.setColor(Becca.colours.success);
     }
 
-    if (voiceEmbed.description) {
+    if (voiceEmbed.data.description) {
       await sendLogEmbed(Becca, oldState.guild, voiceEmbed, "voice_events");
     }
-    Becca.pm2.metrics.events.mark();
   } catch (err) {
     await beccaErrorHandler(Becca, "voice state update listener", err);
   }

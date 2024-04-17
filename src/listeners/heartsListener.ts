@@ -1,7 +1,6 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import { defaultHearts } from "../config/listeners/defaultHearts";
 import { Listener } from "../interfaces/listeners/Listener";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
+import { debugLogger } from "../utils/debugLogger";
 
 /**
  * Checks the server settings to see if the user that sent the message
@@ -15,9 +14,18 @@ export const heartsListener: Listener = {
   run: async (Becca, message, t, config) => {
     try {
       const { author } = message;
-      const usersToHeart = defaultHearts.concat(config.hearts);
-      if (usersToHeart.includes(author.id)) {
-        await message.react(Becca.configs.love);
+      if (config.hearts.includes(author.id)) {
+        await message.react(Becca.configs.love).catch(async () => {
+          await message
+            .react("💜")
+            .catch((err) =>
+              debugLogger(
+                "hearts listener",
+                err.message,
+                `message id ${message.id} in guild id ${message.guild.id}`
+              )
+            );
+        });
       }
     } catch (err) {
       await beccaErrorHandler(

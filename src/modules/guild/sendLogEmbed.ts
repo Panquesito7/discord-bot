@@ -1,7 +1,13 @@
-import { Guild, MessageEmbed, TextChannel } from "discord.js";
+import {
+  ChannelType,
+  Embed,
+  EmbedBuilder,
+  Guild,
+  TextChannel,
+} from "discord.js";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
-import { LogSettings } from "../../interfaces/settings/LogSettings";
+import { Settings } from "../../interfaces/settings/Settings";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
 import { getSettings } from "../settings/getSettings";
 
@@ -11,14 +17,14 @@ import { getSettings } from "../settings/getSettings";
  *
  * @param {BeccaLyria} Becca Becca's Discord instance.
  * @param {Guild} guild The guild object.
- * @param {MessageEmbed} content The MessageEmbed to send to the log channel.
- * @param {LogSettings} channel The log channel option to look for.
+ * @param {EmbedBuilder} content The MessageEmbed to send to the log channel.
+ * @param {Settings} channel The log channel option to look for.
  */
 export const sendLogEmbed = async (
   Becca: BeccaLyria,
   guild: Guild,
-  content: MessageEmbed,
-  channel: LogSettings
+  content: EmbedBuilder | Embed,
+  channel: Settings
 ): Promise<void> => {
   try {
     const guildChannelSetting = (
@@ -30,7 +36,8 @@ export const sendLogEmbed = async (
     }
 
     const logsChannel = guild.channels.cache.find(
-      (chan) => chan.id === guildChannelSetting && chan.type === "GUILD_TEXT"
+      (chan) =>
+        chan.id === guildChannelSetting && chan.type === ChannelType.GuildText
     ) as TextChannel | undefined;
 
     if (!logsChannel) {

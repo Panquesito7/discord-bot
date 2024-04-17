@@ -1,21 +1,26 @@
-/* eslint-disable jsdoc/require-jsdoc */
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "@discordjs/builders";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { Command } from "../interfaces/commands/Command";
+import { CommandHandler } from "../interfaces/commands/CommandHandler";
 import { errorEmbedGenerator } from "../modules/commands/errorEmbedGenerator";
-import { handleCanIUse } from "../modules/commands/subcommands/code/handleCanIUse";
-import { handleColour } from "../modules/commands/subcommands/code/handleColour";
-import { handleHttp } from "../modules/commands/subcommands/code/handleHttp";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
-import { getRandomValue } from "../utils/getRandomValue";
+
+import { handleCanIUse } from "./subcommands/code/handleCanIUse";
+import { handleColour } from "./subcommands/code/handleColour";
+import { handleHttp } from "./subcommands/code/handleHttp";
+import { handleInvalidSubcommand } from "./subcommands/handleInvalidSubcommand";
+
+const handlers: { [key: string]: CommandHandler } = {
+  caniuse: handleCanIUse,
+  colour: handleColour,
+  http: handleHttp,
+};
 
 export const code: Command = {
   data: new SlashCommandBuilder()
     .setName("code")
     .setDescription("Commands related to programming.")
+    .setDMPermission(false)
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName("caniuse")
@@ -58,23 +63,8 @@ export const code: Command = {
       await interaction.deferReply();
 
       const subCommand = interaction.options.getSubcommand();
-      switch (subCommand) {
-        case "caniuse":
-          await handleCanIUse(Becca, interaction, t, config);
-          break;
-        case "colour":
-          await handleColour(Becca, interaction, t, config);
-          break;
-        case "http":
-          await handleHttp(Becca, interaction, t, config);
-          break;
-        default:
-          await interaction.editReply({
-            content: getRandomValue(t("responses:invalidCommand")),
-          });
-          break;
-      }
-      Becca.pm2.metrics.commands.mark();
+      const handler = handlers[subCommand] || handleInvalidSubcommand;
+      await handler(Becca, interaction, t, config);
     } catch (err) {
       const errorId = await beccaErrorHandler(
         Becca,

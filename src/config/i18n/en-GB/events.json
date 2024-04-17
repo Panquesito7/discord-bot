@@ -2,7 +2,11 @@
   "interaction": {
     "bad": "That {{command}} interaction is not valid...",
     "noDms": "I prefer my privacy. Please talk to me in a guild instead.",
-    "noSettings": "I could not find your guild record."
+    "noSettings": "I could not find your guild record.",
+    "noRole": "I cannot find that role.",
+    "addedRole": "You have been granted that title.",
+    "removedRole": "You have been stripped of that title.",
+    "failedRole": "I do not appear to be able to manage that title. Please let the server administrators know that I need permission to `Manage Roles`, and that the roles in these buttons must be lower than my **highest** role."
   },
   "member": {
     "pending": {
@@ -15,7 +19,14 @@
     "leave": {
       "title": "A member has abandoned our guild!",
       "name": "Name",
-      "roles": "Roles"
+      "roles": "Roles",
+      "count": "Messages Sent"
+    },
+    "update": {
+      "title": "A member has updated their profile!",
+      "description": "They have changed their {{- key}}.",
+      "old": "Old Value",
+      "new": "New Value"
     }
   },
   "message": {

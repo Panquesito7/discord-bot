@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 export interface Space {
   copyright: string;
   date: string;

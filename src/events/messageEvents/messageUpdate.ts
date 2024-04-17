@@ -1,5 +1,4 @@
-import { diffSentences } from "diff";
-import { Message, MessageEmbed, PartialMessage } from "discord.js";
+import { Message, EmbedBuilder, PartialMessage, ChannelType } from "discord.js";
 import { getFixedT } from "i18next";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
@@ -10,6 +9,8 @@ import { triggerListener } from "../../listeners/triggerListener";
 import { sendLogEmbed } from "../../modules/guild/sendLogEmbed";
 import { getSettings } from "../../modules/settings/getSettings";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
+import { generateDiff } from "../../utils/generateDiff";
+import { messageHasNecessaryProperties } from "../../utils/typeGuards";
 
 /**
  * Handles the messageUpdate event. Validates that the content in the message
@@ -25,12 +26,18 @@ export const messageUpdate = async (
   newMessage: Message | PartialMessage
 ): Promise<void> => {
   try {
-    const { author, guild, content: newContent } = newMessage;
-    const { content: oldContent } = oldMessage;
-
-    if (!guild || newMessage.channel.type === "DM") {
+    const message = newMessage.partial
+      ? await newMessage.fetch().catch(() => null)
+      : newMessage;
+    if (
+      !message ||
+      !messageHasNecessaryProperties(message) ||
+      message.channel.type === ChannelType.DM
+    ) {
       return;
     }
+    const { author, guild, content: newContent } = message;
+    const { content: oldContent } = oldMessage;
     const lang = guild.preferredLocale;
     const t = getFixedT(lang);
 
@@ -50,39 +57,38 @@ export const messageUpdate = async (
 
     const diffContent =
       oldContent && newContent
-        ? diffSentences(oldContent, newContent)
-            .map((el) =>
-              el.added ? `+ ${el.value}` : el.removed ? `- ${el.value}` : ""
-            )
-            .filter((el) => el)
-            .join("\n")
+        ? generateDiff(oldContent, newContent)
         : t("events:message.edit.nocont");
 
-    const updateEmbed = new MessageEmbed();
+    const updateEmbed = new EmbedBuilder();
     updateEmbed.setTitle(t("events:message.edit.title"));
     updateEmbed.setAuthor({
       name: author.tag,
       iconURL: author.displayAvatarURL(),
     });
     updateEmbed.setDescription(`\`\`\`diff\n${diffContent}\`\`\``);
-    updateEmbed.setFooter(`Author: ${author.id} | Message: ${oldMessage.id}`);
+    updateEmbed.setFooter({
+      text: `Author: ${author.id} | Message: ${oldMessage.id}`,
+    });
     updateEmbed.setColor(Becca.colours.default);
     updateEmbed.setTimestamp();
-    updateEmbed.addField(
-      t("events:message.edit.chan"),
-      `<#${newMessage.channel.id}>`
-    );
-    updateEmbed.addField(t("events:message.edit.link"), newMessage.url);
+    updateEmbed.addFields([
+      {
+        name: t("events:message.edit.chan"),
+        value: `<#${newMessage.channel.id}>`,
+      },
+      {
+        name: t("events:message.edit.link"),
+        value: newMessage.url,
+      },
+    ]);
 
     await sendLogEmbed(Becca, guild, updateEmbed, "message_events");
-
-    const message = await newMessage.fetch();
 
     await sassListener.run(Becca, message, t, serverConfig);
     await automodListener.run(Becca, message, t, serverConfig);
     await triggerListener.run(Becca, message, t, serverConfig);
     await emoteListener.run(Becca, message, t, serverConfig);
-    Becca.pm2.metrics.events.mark();
   } catch (err) {
     await beccaErrorHandler(
       Becca,

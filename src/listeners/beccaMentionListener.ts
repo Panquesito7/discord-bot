@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { Listener } from "../interfaces/listeners/Listener";
 import { beccaErrorHandler } from "../utils/beccaErrorHandler";
 
@@ -11,12 +10,14 @@ export const beccaMentionListener: Listener = {
   description: "Listens for Becca being mentioned.",
   run: async (Becca, message, t) => {
     try {
-      const { channel, guild, mentions } = message;
-      if (!guild || !Becca.user || !mentions.users?.has(Becca.user.id)) {
+      const { channel, mentions } = message;
+      if (!Becca.user || !mentions.users?.has(Becca.user.id)) {
         return;
       }
 
-      await message.react(Becca.configs.think);
+      await message.react(Becca.configs.think).catch(async () => {
+        await message.react("🤔");
+      });
       await channel.send(t("listeners:becca.response"));
     } catch (err) {
       await beccaErrorHandler(

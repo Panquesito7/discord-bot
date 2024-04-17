@@ -1,4 +1,4 @@
-import { Message, MessageEmbed, PartialMessage } from "discord.js";
+import { Message, EmbedBuilder, PartialMessage } from "discord.js";
 import { getFixedT } from "i18next";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
@@ -27,19 +27,29 @@ export const messageDelete = async (
     const lang = guild.preferredLocale;
     const t = getFixedT(lang);
 
-    const deleteEmbed = new MessageEmbed();
+    const deleteEmbed = new EmbedBuilder();
     deleteEmbed.setTitle(t("events:message.delete.title"));
     deleteEmbed.setColor(Becca.colours.default);
     deleteEmbed.setDescription(t("events:message.delete.desc"));
-    deleteEmbed.addField(t("events:message.delete.chan"), `<#${channel.id}>`);
+    deleteEmbed.addFields([
+      {
+        name: t("events:message.delete.chan"),
+        value: `<#${channel.id}>`,
+      },
+      {
+        name: t("events:message.delete.cont"),
+        value: customSubstring(
+          content || t("events:message.delete.nocont"),
+          1000
+        ),
+      },
+    ]);
     deleteEmbed.setTimestamp();
-    deleteEmbed.addField(
-      t("events:message.delete.cont"),
-      customSubstring(content || t("events:message.delete.nocont"), 1000)
-    );
 
     if (author) {
-      deleteEmbed.setFooter(`Author: ${author.id} | Message: ${message.id}`);
+      deleteEmbed.setFooter({
+        text: `Author: ${author.id} | Message: ${message.id}`,
+      });
       deleteEmbed.setAuthor({
         name: author.tag,
         iconURL: author.displayAvatarURL(),
@@ -58,7 +68,6 @@ export const messageDelete = async (
         sendLogEmbed(Becca, guild, embed, "message_events")
       );
     }
-    Becca.pm2.metrics.events.mark();
   } catch (err) {
     await beccaErrorHandler(
       Becca,

@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 export interface Xkcd {
   month: string;
   num: number;

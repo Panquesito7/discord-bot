@@ -1,8 +1,6 @@
-/* eslint-disable jsdoc/require-param */
-
 import { ListenerHandler } from "../../../interfaces/listeners/ListenerHandler";
 import { beccaErrorHandler } from "../../../utils/beccaErrorHandler";
-import { getRandomValue } from "../../../utils/getRandomValue";
+import { tFunctionArrayWrapper } from "../../../utils/tFunctionWrapper";
 
 /**
  * Submodule for amirite comebacks.
@@ -14,7 +12,7 @@ export const sassGreeting: ListenerHandler = async (Becca, message, t) => {
     const greetingRegex =
       /good\s(morning|afternoon|evening|night|day)|morning\severyone/i;
     if (greetingRegex.test(content) || content.toLowerCase() === "morning") {
-      await channel.send(getRandomValue(t("sass:greeting")));
+      await channel.send(tFunctionArrayWrapper(t, "sass:greeting"));
     }
   } catch (err) {
     await beccaErrorHandler(

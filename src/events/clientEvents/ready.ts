@@ -1,9 +1,8 @@
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
-import { getCounts } from "../../modules/becca/getCounts";
+import { loadEvents } from "../../modules/events/scheduledEvent";
 import { beccaLogHandler } from "../../utils/beccaLogHandler";
-import { cacheReactionRoles } from "../../utils/cacheReactionRoles";
 
 /**
  * Sends a notification to the debug hook when Becca has connected to
@@ -13,23 +12,32 @@ import { cacheReactionRoles } from "../../utils/cacheReactionRoles";
  */
 export const ready = async (Becca: BeccaLyria): Promise<void> => {
   beccaLogHandler.log("debug", "Fetching reaction role data...");
-  await cacheReactionRoles(Becca);
-  const readyEmbed = new MessageEmbed();
+  const readyEmbed = new EmbedBuilder();
   readyEmbed.setTitle("Becca is online");
   readyEmbed.setDescription(
     `${Becca.user?.username || "Becca Lyria"} has come online.`
   );
   readyEmbed.setTimestamp();
   readyEmbed.setColor(Becca.colours.success);
-  readyEmbed.setFooter(`Version ${Becca.configs.version}`);
+  readyEmbed.setFooter({ text: `Version ${Becca.configs.version}` });
 
-  await Becca.debugHook.send({ embeds: [readyEmbed] });
+  await Becca.debugHook.send({
+    embeds: [readyEmbed],
+    username: Becca.user?.username ?? "Becca",
+    avatarURL:
+      Becca.user?.displayAvatarURL() ??
+      "https://cdn.nhcarrigan.com/avatars/nhcarrigan.png",
+  });
   beccaLogHandler.log("debug", "Discord ready!");
 
-  const counts = getCounts(Becca);
-  Becca.pm2.metrics.guilds.set(counts.guilds);
-  Becca.pm2.metrics.users.set(counts.members);
+  await loadEvents(Becca);
+  beccaLogHandler.log("debug", "Loaded scheduled events!");
 
-  beccaLogHandler.log("debug", "Loaded PM2 counts!");
-  Becca.pm2.metrics.events.mark();
+  await Becca.debugHook.send({
+    content: "Boot Process Complete~!",
+    username: Becca.user?.username ?? "Becca",
+    avatarURL:
+      Becca.user?.displayAvatarURL() ??
+      "https://cdn.nhcarrigan.com/avatars/nhcarrigan.png",
+  });
 };

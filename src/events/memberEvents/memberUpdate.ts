@@ -1,11 +1,18 @@
-import { GuildMember, MessageEmbed, PartialGuildMember } from "discord.js";
+import {
+  GuildMember,
+  EmbedBuilder,
+  PartialGuildMember,
+  PermissionFlagsBits,
+} from "discord.js";
 import { getFixedT } from "i18next";
 
-import { defaultServer } from "../../config/database/defaultServer";
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
-import { sendWelcomeEmbed } from "../../modules/guild/sendWelcomeEmbed";
+import { memberNicknameChange } from "../../modules/events/memberUpdate/memberNicknameChange";
+import { memberPassedScreening } from "../../modules/events/memberUpdate/memberPassedScreening";
+import { memberRolesChange } from "../../modules/events/memberUpdate/memberRolesChange";
 import { getSettings } from "../../modules/settings/getSettings";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
+import { FetchWrapper } from "../../utils/FetchWrapper";
 
 /**
  * Handles the memberUpdate event. Currently checks to see if
@@ -24,41 +31,71 @@ export const memberUpdate = async (
     const { guild, user } = newMember;
     const lang = guild.preferredLocale;
     const t = getFixedT(lang);
+    const serverSettings = await getSettings(Becca, guild.id, guild.name);
+
+    if (!serverSettings) {
+      return;
+    }
 
     // passes membership screening
     if (oldMember.pending && !newMember.pending) {
-      const serverSettings = await getSettings(Becca, guild.id, guild.name);
-      const welcomeText = (
-        serverSettings?.custom_welcome || defaultServer.custom_welcome
-      )
-        .replace(/{@username}/gi, user.username)
-        .replace(/{@servername}/gi, guild.name);
-
-      const welcomeEmbed = new MessageEmbed();
-      welcomeEmbed.setColor(Becca.colours.default);
-      welcomeEmbed.setTitle(t("events:member.join.title"));
-      welcomeEmbed.setDescription(welcomeText);
-      welcomeEmbed.setAuthor({
-        name: user.tag,
-        iconURL: user.displayAvatarURL(),
-      });
-      welcomeEmbed.setFooter(`ID: ${user.id}`);
-      welcomeEmbed.setTimestamp();
-
-      await sendWelcomeEmbed(Becca, guild, "join", welcomeEmbed);
-
-      if (serverSettings?.join_role) {
-        const joinRole = await guild.roles.fetch(serverSettings.join_role);
-        if (joinRole) {
-          await newMember.roles.add(joinRole);
-        }
-      }
+      await memberPassedScreening(Becca, newMember, serverSettings, t);
     }
-    Becca.pm2.metrics.events.mark();
+
+    if (!serverSettings.member_events) {
+      return;
+    }
+
+    const logChannel = await FetchWrapper.channel(
+      guild,
+      serverSettings.member_events
+    );
+    const beccaMember = await FetchWrapper.becca(Becca, guild);
+
+    if (
+      !logChannel?.isTextBased() ||
+      !beccaMember
+        ?.permissionsIn(logChannel)
+        .has(PermissionFlagsBits.SendMessages)
+    ) {
+      return;
+    }
+
+    const embed = new EmbedBuilder();
+    embed.setColor(Becca.colours.default);
+    embed.setTitle(t("events:member.update.title"));
+    embed.setAuthor({
+      name: user.username,
+      iconURL: user.displayAvatarURL(),
+    });
+    embed.setFooter({ text: `ID: ${user.id}` });
+    embed.setTimestamp();
+
+    if (oldMember.nickname !== newMember.nickname) {
+      await memberNicknameChange(
+        Becca,
+        oldMember,
+        newMember,
+        embed,
+        t,
+        logChannel
+      );
+    }
+
+    if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
+      await memberRolesChange(
+        Becca,
+        oldMember,
+        newMember,
+        embed,
+        t,
+        logChannel
+      );
+    }
   } catch (err) {
     await beccaErrorHandler(
       Becca,
-      "member remove event",
+      "member update event",
       err,
       newMember.guild.name
     );

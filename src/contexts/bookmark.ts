@@ -1,9 +1,9 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
   TextChannel,
   User,
 } from "discord.js";
@@ -23,16 +23,16 @@ export const bookmark: Context = {
 
       const message = interaction.options.getMessage("message") as Message;
       const channel = interaction.channel as TextChannel;
-      const guild = interaction.guild?.name;
+      const guild = interaction.guild.name;
 
-      if (!message || !channel || !guild) {
+      if (!message || !channel) {
         await interaction.editReply(t("contexts:bookmark.failed"));
         return;
       }
 
       const author = message.author as User;
 
-      const bookmarkEmbed = new MessageEmbed();
+      const bookmarkEmbed = new EmbedBuilder();
       bookmarkEmbed.setTitle(t("contexts:bookmark.title"));
       bookmarkEmbed.setDescription(message.url);
       bookmarkEmbed.setAuthor({
@@ -40,19 +40,31 @@ export const bookmark: Context = {
         iconURL: author.displayAvatarURL(),
       });
       bookmarkEmbed.setColor(Becca.colours.default);
-      bookmarkEmbed.addField("Guild", guild, true);
-      bookmarkEmbed.addField("Channel", channel.name, true);
+      bookmarkEmbed.addFields([
+        {
+          name: "Guild",
+          value: guild,
+          inline: true,
+        },
+        {
+          name: "Channel",
+          value: channel.name,
+          inline: true,
+        },
+      ]);
       bookmarkEmbed.setFooter({
-        text: t("defaults:donate"),
-        iconURL: "https://cdn.nhcarrigan.com/profile-transparent.png",
+        text: t("defaults:footer"),
+        iconURL: "https://cdn.nhcarrigan.com/profile.png",
       });
 
-      const deleteButton = new MessageButton()
+      const deleteButton = new ButtonBuilder()
         .setCustomId("delete-bookmark")
         .setLabel(t("contexts:bookmark.deleteLabel"))
-        .setStyle("DANGER");
+        .setStyle(ButtonStyle.Danger);
 
-      const row = new MessageActionRow().addComponents([deleteButton]);
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents([
+        deleteButton,
+      ]);
 
       await interaction.user
         .send({ embeds: [bookmarkEmbed], components: [row] })

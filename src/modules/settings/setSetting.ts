@@ -1,9 +1,23 @@
-/* eslint-disable no-case-declarations */
+import { servers } from "@prisma/client";
+
 import { BeccaLyria } from "../../interfaces/BeccaLyria";
-import { ServerConfig } from "../../interfaces/database/ServerConfig";
-import { Settings } from "../../interfaces/settings/Settings";
 import { beccaErrorHandler } from "../../utils/beccaErrorHandler";
 import { beccaLogHandler } from "../../utils/beccaLogHandler";
+import {
+  isAntiphishSetting,
+  isChannelIdArraySetting,
+  isChannelIdSetting,
+  isLevelRoleArraySetting,
+  isNumberSetting,
+  isRoleIdArraySetting,
+  isRoleIdSetting,
+  isStringArraySetting,
+  isStringSetting,
+  isStyleSetting,
+  isUserIdArraySetting,
+} from "../../utils/typeGuards";
+
+import { settingsSetters } from "./settingsSetters";
 
 /**
  * This handles all of the logic for setting a server's config. Depending on
@@ -11,108 +25,65 @@ import { beccaLogHandler } from "../../utils/beccaLogHandler";
  * as necessary.
  *
  * @param {BeccaLyria} Becca Becca's Discord instance.
- * @param {string} serverID The ID of the server to modify settings for.
  * @param {string} serverName The current name of the server.
- * @param {Settings} key The name of the setting to modify.
+ * @param {keyof servers} key The name of the setting to modify.
  * @param {string} value The value to change the setting to.
- * @param {ServerConfig} server The server config entry in the database.
- * @returns {ServerConfig | null} ServerModel on success and null on error.
+ * @param {servers} server The server config entry in the database.
+ * @returns {servers | null} ServerModel on success and null on error.
  */
 export const setSetting = async (
   Becca: BeccaLyria,
-  serverID: string,
   serverName: string,
-  key: Settings,
+  key: keyof servers,
   value: string,
-  server: ServerConfig
-): Promise<ServerConfig | null> => {
+  server: servers
+): Promise<servers | null> => {
   try {
-    const parsedValue = value.replace(/\D/g, "");
-
-    switch (key) {
-      case "automod_channels":
-      case "no_automod_channels":
-        if (value === "all") {
-          server[key] = ["all"];
-          break;
-        }
-        if (server[key].includes(parsedValue)) {
-          const index = server[key].indexOf(parsedValue);
-          server[key].splice(index, 1);
-        } else {
-          server[key].push(parsedValue);
-        }
-        server.markModified(key);
-        break;
-      case "hearts":
-      case "blocked":
-      case "self_roles":
-      case "automod_roles":
-      case "level_ignore":
-      case "emote_channels":
-        if (server[key].includes(parsedValue)) {
-          const index = server[key].indexOf(parsedValue);
-          server[key].splice(index, 1);
-        } else {
-          server[key].push(parsedValue);
-        }
-        server.markModified(key);
-        break;
-      case "allowed_links":
-        if (server[key].includes(value)) {
-          const index = server[key].indexOf(value);
-          server[key].splice(index, 1);
-        } else {
-          server[key].push(value);
-        }
-        server.markModified(key);
-        break;
-      case "level_roles":
-        const [level, role] = value.split(" ");
-        const hasSetting = server[key].findIndex(
-          (el) =>
-            el.role === role.replace(/\D/g, "") &&
-            el.level === parseInt(level, 10)
-        );
-        if (hasSetting === -1) {
-          server[key].push({
-            level: parseInt(level, 10),
-            role: role.replace(/\D/g, ""),
-          });
-        } else {
-          server[key].splice(hasSetting, 1);
-        }
-        server.markModified(key);
-        break;
-      case "custom_welcome":
-      case "levels":
-      case "link_message":
-      case "leave_message":
-      case "sass_mode":
-      case "links":
-      case "profanity":
-      case "profanity_message":
-      case "appeal_link":
-        server[key] = value;
-        break;
-      case "welcome_channel":
-      case "depart_channel":
-      case "message_events":
-      case "voice_events":
-      case "thread_events":
-      case "moderation_events":
-      case "member_events":
-      case "level_channel":
-      case "suggestion_channel":
-      case "join_role":
-      case "report_channel":
-        server[key] = value.replace(/\D/g, "");
-        break;
-      default:
-        beccaLogHandler.log("error", "the setSettings logic broke horribly.");
+    if (
+      isUserIdArraySetting(key) ||
+      isChannelIdArraySetting(key) ||
+      isRoleIdArraySetting(key)
+    ) {
+      settingsSetters.setArrayOfIdSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
     }
-
-    await server.save();
+    if (isStyleSetting(key)) {
+      settingsSetters.setStyleSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isStringArraySetting(key)) {
+      settingsSetters.setArrayOfStringSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isLevelRoleArraySetting(key)) {
+      settingsSetters.setArrayOfLevelRoleSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isStringSetting(key)) {
+      settingsSetters.setStringSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isNumberSetting(key)) {
+      settingsSetters.setNumberSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isAntiphishSetting(key)) {
+      settingsSetters.setAntiphishSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    if (isChannelIdSetting(key) || isRoleIdSetting(key)) {
+      settingsSetters.setIdSetting(server, key, value);
+      await settingsSetters.updateDatabase(Becca, server, key);
+      return server;
+    }
+    beccaLogHandler.log("error", "The settings set logic broke horribly.");
     return server;
   } catch (err) {
     await beccaErrorHandler(Becca, "set setting module", err, serverName);

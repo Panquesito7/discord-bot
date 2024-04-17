@@ -1,8 +1,8 @@
-import { ContextMenuInteraction } from "discord.js";
+import { servers } from "@prisma/client";
 import { TFunction } from "i18next";
 
 import { BeccaLyria } from "../BeccaLyria";
-import { ServerConfig } from "../database/ServerConfig";
+import { ValidatedContextMenuCommandInteraction } from "../discord/ValidatedContextMenuCommand";
 
 export interface Context {
   data: {
@@ -13,14 +13,14 @@ export interface Context {
    * Handles the logic for a given context menu interaction.
    *
    * @param {BeccaLyria} Becca Becca's Discord instance.
-   * @param {ContextMenuInteraction} interaction The context menu interaction payload.
+   * @param {ValidatedContextMenuCommandInteraction} interaction The context menu interaction payload.
    * @param {TFunction} t The i18next translation function.
-   * @param {ServerConfig} config The server's settings from the database.
+   * @param {servers} config The server's settings from the database.
    */
   run: (
     Becca: BeccaLyria,
-    interaction: ContextMenuInteraction,
+    interaction: ValidatedContextMenuCommandInteraction,
     t: TFunction,
-    config: ServerConfig
+    config: servers
   ) => Promise<void>;
 }
